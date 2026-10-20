@@ -1,0 +1,29 @@
+# Privacy & storage
+
+Updated 20 October 2026 · Version 2026-10-20
+
+## No account required
+
+This version of lilimio. has no sign-in, advertising or analytics integration. The app itself does not set cookies. It uses browser local storage, session storage and an offline service-worker cache for the features described here. The storage notice acknowledges these existing practices; it does not enable optional tracking.
+
+## What stays on this device
+
+Chosen city and coordinates, temperature units, motion preference, onboarding acknowledgement, storage-notice choice, install-prompt preference, saved plans, place bookmarks, downloaded-guide lists and correction drafts are stored in this browser. Weather and recent directory results are cached locally. Closing the install reminder lasts for this browser-tab session; “Don’t show again” lasts until reset or this site’s data is cleared. These preferences are not synchronized between devices.
+
+Local items generally remain until removed, overwritten by newer cache entries or cleared by you or the browser. Directory cache is limited to eight searches; entries older than 24 hours are marked stale. Cached weather shows its retrieval time and stale status. Correction drafts remain local and are not submitted. Files you separately download remain on your device even after clearing site data.
+
+## What leaves your device
+
+Weather requests send the chosen coordinates to Open-Meteo. If you choose device location, your browser requests permission first; resulting coordinates are used for the weather request and saved chosen location. You can choose a city manually instead. Worldwide city searches send your search text to Open-Meteo / GeoNames. Nearby-place searches send the separately selected city centre to Photon by komoot for OpenStreetMap results; weather GPS coordinates are not automatically reused for this directory.
+
+Map requests go to OpenFreeMap and its map resources. Directions open Google Maps only when chosen. Following a source link opens that provider’s website. External services and the website host receive standard connection information, such as your IP address and request details, and may keep logs under their own policies. lilimio. does not control those logs or promise that external sites use no cookies.
+
+## Your controls
+
+Use Settings → Privacy & data to review this notice, reopen the storage notice or clear lilimio’s local saved items. Use your browser’s site-data controls to remove offline caches, service workers and any site cookies. Clearing app-local saved items alone does not remove the offline application cache or files already downloaded. Blocking browser storage can prevent persistence and offline features; the app will still let you browse with available functionality.
+
+Device location permissions can be revoked in browser settings. Installation is optional. Install-reminder preferences can be reset in Settings → Install. Notification switches currently save a preference only; push delivery is not connected. No browser permissions are granted by accepting the storage notice or terms.
+
+## Providers and changes
+
+See [Open-Meteo terms and privacy](https://open-meteo.com/en/terms), [Photon’s public service information](https://github.com/komoot/photon), [OpenFreeMap](https://openfreemap.org/), and [Google’s privacy policy](https://policies.google.com/privacy). This notice describes this version’s behavior and will be updated if collection or integrations change.

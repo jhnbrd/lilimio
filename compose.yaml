@@ -1,0 +1,23 @@
+name: lilimio
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lilimio:local
+    ports:
+      - "127.0.0.1:8063:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

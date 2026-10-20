@@ -1,0 +1,183 @@
+{
+  "native_icon_master": [
+    1254,
+    1254
+  ],
+  "native_wordmark_master": [
+    2146,
+    733
+  ],
+  "origin": "High-resolution AI reconstructions of selected raster mockup icon and lettering; not recovered vector sources.",
+  "exports": [
+    {
+      "file": "png/app-icon-64.png",
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA",
+      "purpose": "General transparent logo PNG"
+    },
+    {
+      "file": "png/app-icon-128.png",
+      "width": 128,
+      "height": 128,
+      "mode": "RGBA",
+      "purpose": "General transparent logo PNG"
+    },
+    {
+      "file": "png/app-icon-256.png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "purpose": "General transparent logo PNG"
+    },
+    {
+      "file": "png/app-icon-512.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGBA",
+      "purpose": "General transparent logo PNG"
+    },
+    {
+      "file": "png/app-icon-1024.png",
+      "width": 1024,
+      "height": 1024,
+      "mode": "RGBA",
+      "purpose": "General transparent logo PNG"
+    },
+    {
+      "file": "favicon/favicon-16.png",
+      "width": 16,
+      "height": 16,
+      "mode": "RGBA",
+      "purpose": "Browser favicon"
+    },
+    {
+      "file": "favicon/favicon-32.png",
+      "width": 32,
+      "height": 32,
+      "mode": "RGBA",
+      "purpose": "Browser favicon"
+    },
+    {
+      "file": "favicon/favicon-48.png",
+      "width": 48,
+      "height": 48,
+      "mode": "RGBA",
+      "purpose": "Browser favicon"
+    },
+    {
+      "file": "favicon/favicon-64.png",
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA",
+      "purpose": "Browser favicon"
+    },
+    {
+      "file": "favicon/favicon-96.png",
+      "width": 96,
+      "height": 96,
+      "mode": "RGBA",
+      "purpose": "Browser favicon"
+    },
+    {
+      "file": "favicon/favicon.ico",
+      "sizes": [
+        16,
+        32,
+        48
+      ],
+      "purpose": "Multi-resolution browser ICO"
+    },
+    {
+      "file": "apple/apple-touch-icon-120.png",
+      "width": 120,
+      "height": 120,
+      "mode": "RGB",
+      "purpose": "Opaque Apple home-screen icon"
+    },
+    {
+      "file": "apple/apple-touch-icon-152.png",
+      "width": 152,
+      "height": 152,
+      "mode": "RGB",
+      "purpose": "Opaque Apple home-screen icon"
+    },
+    {
+      "file": "apple/apple-touch-icon-167.png",
+      "width": 167,
+      "height": 167,
+      "mode": "RGB",
+      "purpose": "Opaque Apple home-screen icon"
+    },
+    {
+      "file": "apple/apple-touch-icon-180.png",
+      "width": 180,
+      "height": 180,
+      "mode": "RGB",
+      "purpose": "Opaque Apple home-screen icon"
+    },
+    {
+      "file": "apple/apple-touch-icon.png",
+      "width": 180,
+      "height": 180,
+      "mode": "RGB",
+      "purpose": "Default opaque Apple home-screen icon"
+    },
+    {
+      "file": "pwa/icon-192.png",
+      "width": 192,
+      "height": 192,
+      "mode": "RGB",
+      "purpose": "PWA regular icon, purpose any"
+    },
+    {
+      "file": "pwa/icon-512.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "purpose": "PWA regular icon, purpose any"
+    },
+    {
+      "file": "pwa/icon-maskable-192.png",
+      "width": 192,
+      "height": 192,
+      "mode": "RGB",
+      "purpose": "PWA maskable icon with centered motif"
+    },
+    {
+      "file": "pwa/icon-maskable-512.png",
+      "width": 512,
+      "height": 512,
+      "mode": "RGB",
+      "purpose": "PWA maskable icon with centered motif"
+    },
+    {
+      "file": "png/wordmark-320.png",
+      "width": 320,
+      "height": 105,
+      "mode": "RGBA",
+      "purpose": "Transparent wordmark artwork, aspect ratio preserved"
+    },
+    {
+      "file": "png/wordmark-640.png",
+      "width": 640,
+      "height": 210,
+      "mode": "RGBA",
+      "purpose": "Transparent wordmark artwork, aspect ratio preserved"
+    },
+    {
+      "file": "png/wordmark-1280.png",
+      "width": 1280,
+      "height": 421,
+      "mode": "RGBA",
+      "purpose": "Transparent wordmark artwork, aspect ratio preserved"
+    },
+    {
+      "file": "png/wordmark-1600.png",
+      "width": 1600,
+      "height": 526,
+      "mode": "RGBA",
+      "purpose": "Transparent wordmark artwork, aspect ratio preserved"
+    }
+  ]
+}

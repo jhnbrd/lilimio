@@ -1,0 +1,48 @@
+# Local dependencies and generated output; Docker installs/builds its own.
+**/node_modules
+**/dist
+**/dist-ssr
+**/.vite
+**/.vite-temp
+**/coverage
+**/*.tsbuildinfo
+
+# Local archives and design references never belong in the image context.
+.git
+.old
+implementation-backup
+mockups
+output
+screenshots
+qa-output
+qa.html
+playwright-report
+test-results
+.agents
+.codex
+.aws
+.idea
+.vscode
+.vercel
+.netlify
+supabase/.temp
+supabase/.branches
+
+# Private environment files and local credentials are not build inputs.
+**/.env
+**/.env.*
+**/*.local
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*
+**/*.log
+**/*.tmp
+**/Thumbs.db
+**/Desktop.ini
+**/.DS_Store
+
+# Preserve these on disk, but do not send unused asset sources to the builder.
+public/images/brand/lilimio/marketing
+public/images/brand/lilimio/masters
+public/images/brand/lilimio/source-prompts

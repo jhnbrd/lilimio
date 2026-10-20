@@ -1,0 +1,64 @@
+# Dependencies and generated builds
+node_modules/
+/dist/
+/dist-ssr/
+*.tsbuildinfo
+.vite/
+.vite-temp/
+coverage/
+
+# Local design references, archives, and implementation backups
+/mockups/
+/.old/
+/implementation-backup/
+
+# Generated screenshots, QA artifacts, and temporary inspection harness
+/output/
+/screenshots/
+/qa-output/
+/qa.html
+playwright-report/
+test-results/
+.nyc_output/
+
+# Local configuration and secrets (only sanitized examples belong in Git)
+.env*
+!.env.example
+!.env.*.example
+*.local
+/.vercel/
+/.netlify/
+/supabase/.temp/
+/supabase/.branches/
+.agents/
+.codex/
+.aws/
+.ssh/
+.npmrc
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+
+# Logs and temporary editor files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.swp
+*.swo
+*~
+/.idea/
+/.vscode/
+
+# OS metadata
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+
+# Keep public/ assets, source, tests, migrations, and package-lock.json trackable.

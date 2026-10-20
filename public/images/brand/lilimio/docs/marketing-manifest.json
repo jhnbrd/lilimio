@@ -1,0 +1,20 @@
+[
+  {
+    "file": "project-banner.png",
+    "width": 2145,
+    "height": 733,
+    "sha256": "a32201c067de6b2a8c48dee65a19cffe2322c23513dfb91d54237b4b51622f3d"
+  },
+  {
+    "file": "facebook-app-introduction.png",
+    "width": 1122,
+    "height": 1402,
+    "sha256": "1aa982f880e8a8dbb06fe08f9d5145f75fdf1a3fc09565b1c98d9bcb9e7d1773"
+  },
+  {
+    "file": "facebook-coming-soon.png",
+    "width": 1254,
+    "height": 1254,
+    "sha256": "d68448d37a6b00d6250a48a3fde5efb171a55a1ee5f482ee7571fea21cdaa865"
+  }
+]
