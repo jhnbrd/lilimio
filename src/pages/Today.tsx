@@ -51,6 +51,13 @@ export default function Today() {
               {weather ? temp(weather.current.heatIndex) : "—"}
             </div>
             <p>Estimated heat index</p>
+            {weather && (
+              <p className="current-air-temperature">
+                <Thermometer size={20} aria-hidden="true" />
+                <span>Air temperature</span>
+                <strong>{temp(weather.current.temperature)}</strong>
+              </p>
+            )}
           </div>
           {r && (
             <div className={`risk-label ${r.tone}`}>

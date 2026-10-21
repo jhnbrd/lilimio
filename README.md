@@ -28,6 +28,7 @@ For the Debian home server, `compose.yaml` builds a production Nginx image and b
 - Three-stage illustrated onboarding with optional city/device-location selection and a skip path. Deep-linked guides remain accessible without onboarding or accounts.
 - Responsive desktop sidebar and mobile Today / Plan / More navigation. Forecast, directory, guides, updates, settings, saved items and downloads are exposed by name.
 - Live Open-Meteo current model estimates and three days of hourly data, with NOAA/NWS calculated heat index. Daily peaks use complete days only. No illustrative weather is substituted for a failed request.
+- Front-page air temperature alongside the estimated heat index on mobile and desktop, both following the selected Celsius/Fahrenheit units.
 - City-specific browser caching, source/retrieval/model timestamps, cancellation, refresh, missing/stale/offline states and recovery actions.
 - Experimental activity-window comparisons across heat, duration, intensity, UV, rain and preferred period. Inputs are preserved, past/incomplete/stale windows are excluded, and selected plans save locally. Recheck uses the plan's saved location.
 - MapLibre/OpenFreeMap map with worldwide city search and live OpenStreetMap places through Photon: parks/gardens, libraries/malls, and mapped drinking-water points. Includes category searches, source links, coordinate-specific caching, accessible lists, directions, local bookmarks and correction drafts.

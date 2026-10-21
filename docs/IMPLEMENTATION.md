@@ -1,5 +1,11 @@
 # React PWA implementation
 
+## Front-page air temperature (2026-10-20)
+
+Today now shows a compact, labeled air-temperature reading directly beneath the estimated heat index on mobile and desktop. It uses `weather.current.temperature` from the same current forecast and the existing Celsius/Fahrenheit formatter. The heat index remains the primary reading; unavailable forecasts do not receive a fabricated temperature. Source, stale/error behavior and the heat-risk classification remain attached to the existing forecast.
+
+All 34 tests, typecheck and production build passed. Browser verified visible air temperature alongside the heat index at 320px/390px mobile and 1280px desktop, no horizontal overflow in checked mobile views, and Fahrenheit conversion for both readings; Celsius was restored afterward. No browser errors/warnings were recorded. The local preview had stopped and was serving its older offline copy; the preview was restarted and the new service-worker version activated for verification. No Docker container, public deployment or GitHub push was performed for this change.
+
 ## Debian Docker configuration (2026-10-20)
 
 Added a Node 24 build stage and an unprivileged Nginx static runtime, Compose binding `127.0.0.1:8063:8080`, SPA deep-link fallback, PWA update/cache handling, health check, read-only root and bounded logs. The existing host tunnel remains separate. `.dockerignore` excludes copied Windows dependencies, archives, design references, local secrets and generated output; Docker installs Linux dependencies from the lockfile. See DOCKER.md for later Debian commands and the localhost assumption for the tunnel agent.
