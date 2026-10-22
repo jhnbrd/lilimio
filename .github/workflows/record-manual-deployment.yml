@@ -1,0 +1,61 @@
+name: Record manual deployment
+run-name: Record owner-reported manual deployment of ${{ inputs.deployed_ref }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployed_ref:
+        description: Exact commit SHA (preferred) or tag already deployed and verified on Debian
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: record-manual-production-deployment
+  cancel-in-progress: false
+
+jobs:
+  record:
+    name: Record existing deployment (no server changes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      DEPLOYED_REF: ${{ inputs.deployed_ref }}
+      SITE_URL: https://lilimio.jhnbrd.com
+    steps:
+      - name: Record the operator's deployment attestation
+        shell: bash
+        run: |
+          set -euo pipefail
+          encoded_ref=$(node -e 'process.stdout.write(encodeURIComponent(process.env.DEPLOYED_REF))')
+          sha=$(gh api "repos/$GH_REPO/commits/$encoded_ref" --jq .sha)
+          jq -n --arg sha "$sha" '{
+            ref: $sha,
+            task: "record-manual-deployment",
+            auto_merge: false,
+            required_contexts: [],
+            environment: "production",
+            production_environment: true,
+            transient_environment: false,
+            description: "Owner-reported manual deployment already completed; record only.",
+            payload: {method: "manual", record_only: true, verification: "owner-reported"}
+          }' > "$RUNNER_TEMP/deployment.json"
+          deployment_id=$(gh api --method POST "repos/$GH_REPO/deployments" \
+            --input "$RUNNER_TEMP/deployment.json" --jq .id)
+          gh api --method POST "repos/$GH_REPO/deployments/$deployment_id/statuses" \
+            -f state=success \
+            -f environment_url="$SITE_URL" \
+            -f log_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            -f description="Recorded existing manual deployment; no server changes performed." \
+            -F auto_inactive=true > /dev/null
+          {
+            echo '### Existing manual deployment recorded'
+            printf '\nCommit: `%s`\n\n' "$sha"
+            printf 'App: %s\n\n' "$SITE_URL"
+            echo 'Owner-reported deployment. This workflow did not deploy or independently verify the server.'
+          } >> "$GITHUB_STEP_SUMMARY"
