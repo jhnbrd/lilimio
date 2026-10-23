@@ -115,7 +115,7 @@ export const guides = [
     tips: [
       "Stop activity and move to a shaded or air-conditioned place if you feel dizzy, weak, nauseated, or develop a headache.",
       "Cool the body with wet cloths, a cool shower, and moving air. Have someone stay nearby.",
-      "Confusion, collapse, seizures, or loss of consciousness can mean heatstroke. Call 911 and begin cooling immediately.",
+      "Confusion, collapse, seizures, or loss of consciousness can mean heatstroke. Call your local emergency number (911 in the Philippines and US) and begin cooling immediately.",
       "Do not give drinks to someone who is confused, unconscious, or unable to swallow.",
     ],
     source:

@@ -27,6 +27,8 @@ import {
 import { useApp } from "./state";
 import { cities, type City } from "./lib/data";
 import { isStale } from "./lib/heat";
+import { freshnessLabel } from "./lib/time";
+import { searchDirectoryCities } from "./lib/directory";
 import { dateLabel } from "./lib/weather";
 
 const scenes = {
@@ -247,9 +249,29 @@ export function CityPicker({
       active.current = false;
     };
   }, []);
-  const results = cities.filter((c) =>
-    (c.name + " " + c.region).toLowerCase().includes(query.toLowerCase()),
-  );
+  const [remoteCities, setRemoteCities] = useState<City[]>([]);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    setRemoteCities([]);
+    if (query.trim().length < 3) { setSearching(false); return; }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setSearching(true); setError("");
+      const timeout = setTimeout(() => { controller.abort(); setSearching(false); setError("City search timed out. Try again."); }, 12000);
+      searchDirectoryCities(query, controller.signal).then(results => {
+        if (!controller.signal.aborted) setRemoteCities(results.map(c => ({...c, id: `city-${c.latitude}-${c.longitude}`})));
+      }).catch(() => { if (!controller.signal.aborted) setError("City search unavailable. Try again or use your location."); })
+        .finally(() => { clearTimeout(timeout); if (!controller.signal.aborted) setSearching(false); });
+    }, 500);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [query]);
+  const results = [
+    ...remoteCities,
+    ...cities.filter(c =>
+      !remoteCities.some(r => r.latitude === c.latitude && r.longitude === c.longitude) &&
+      (c.name + " " + c.region).toLowerCase().includes(query.trim().toLowerCase()),
+    ),
+  ];
   function locate() {
     if (!navigator.geolocation) {
       setError("Location is unavailable. Choose a city instead.");
@@ -263,18 +285,19 @@ export function CityPicker({
         setLocating(false);
         const { latitude, longitude } = pos.coords;
         if (
-          latitude < 4 ||
-          latitude > 22 ||
-          longitude < 116 ||
-          longitude > 127
+          !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+          latitude < -90 ||
+          latitude > 90 ||
+          longitude < -180 ||
+          longitude > 180
         ) {
-          setError("Choose a location in the Philippines.");
+          setError("Location coordinates are invalid.");
           return;
         }
         onChoose({
           id: "device",
           name: "Your location",
-          region: "Philippines",
+          region: "Device coordinates",
           latitude,
           longitude,
         });
@@ -306,7 +329,7 @@ export function CityPicker({
         />
       </div>
       <p className="muted">
-        Choose one of six supported cities, or use device coordinates.
+        Search cities worldwide, or use your device location.
       </p>
       <div className="city-results">
         {results.map((c) => (
@@ -329,7 +352,7 @@ export function CityPicker({
         ))}
         {!results.length && (
           <p>
-            No supported city matches. Try a nearby city or use device location.
+            {searching ? "Searching cities…" : "No city matches. Try another spelling or use device location."}
           </p>
         )}
       </div>
@@ -365,31 +388,33 @@ export function CityButton() {
   );
 }
 export function Source({ full = false, compact = false, refreshable = false }: { full?: boolean; compact?: boolean; refreshable?: boolean }) {
-  const { weather, loading, refresh } = useApp();
+  const { weather, loading, refresh, city, online, error } = useApp();
+  const [, setClock] = useState(0);
+  useEffect(() => { const timer = setInterval(() => setClock(n => n + 1), 60000); return () => clearInterval(timer); }, []);
   return (
     <p className="source" aria-live="polite">
-      Open-Meteo ·{" "}
+      {city?.name} · Open-Meteo model estimate ·{" "}
       {loading
         ? "Refreshing forecast…"
         : weather
-        ? `Updated ${dateLabel(weather.fetchedAt, { day: compact ? undefined : "numeric", month: compact ? undefined : "short", hour: "numeric", minute: "2-digit" })}`
+        ? `${freshnessLabel(weather.fetchedAt)}${!online ? " · Offline saved reading" : error ? " · Refresh failed; saved reading" : isStale(weather) ? " · Out of date; refresh before planning" : ""}`
         : "Forecast not loaded"}
       {refreshable && (
         <button className="source-refresh" type="button" onClick={refresh} disabled={loading} aria-label={loading ? "Refreshing forecast" : "Refresh forecast"} aria-busy={loading} title="Refresh forecast">
           <RefreshCw size={18} aria-hidden />
         </button>
       )}
-      {full && weather && (
+      {weather && (
         <>
           <br />
-          Model time:{" "}
+          Conditions time:{" "}
           {dateLabel(weather.current.time, {
             day: "numeric",
             month: "short",
             hour: "numeric",
             minute: "2-digit",
           })}
-          . Estimates, not station observations.
+           · {weather.timezone || "Asia/Manila"}. Not station observations.
         </>
       )}
     </p>

@@ -21,10 +21,10 @@ export function validCity(v: unknown): v is City {
     c.name.length < 100 &&
     Number.isFinite(c.latitude) &&
     Number.isFinite(c.longitude) &&
-    c.latitude >= 4 &&
-    c.latitude <= 22 &&
-    c.longitude >= 116 &&
-    c.longitude <= 127
+    c.latitude >= -90 &&
+    c.latitude <= 90 &&
+    c.longitude >= -180 &&
+    c.longitude <= 180
   );
 }
 function useStateValue() {

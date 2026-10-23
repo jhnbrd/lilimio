@@ -1,0 +1,55 @@
+name: Quality checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          APP_BUILD_SHA: ${{ github.sha }}
+      - name: Check offline download budget
+        run: node scripts/check-build.mjs
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build production image
+        env:
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          docker build --build-arg APP_BUILD_SHA="$BUILD_SHA" -t lilimio:ci .
+          docker build --target observations -t lilimio-observations:ci .
+      - name: Verify Nginx and build identity
+        env:
+          BUILD_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker network create lilimio-ci
+          docker run -d --name observations --network lilimio-ci --read-only --cap-drop ALL --security-opt no-new-privileges lilimio-observations:ci
+          trap 'docker logs lilimio-ci; docker logs observations; docker rm -f lilimio-ci observations; docker network rm lilimio-ci' EXIT
+          docker run -d --name lilimio-ci --network lilimio-ci --read-only --tmpfs /tmp:rw,noexec,nosuid,size=16m,mode=1777 --cap-drop ALL --security-opt no-new-privileges -p 127.0.0.1:8063:8080 lilimio:ci
+          curl --retry 10 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8063/healthz
+          curl -fsS http://127.0.0.1:8063/build-info.json | jq -e --arg sha "$BUILD_SHA" '.revision == $sha'
+          curl -fsS http://127.0.0.1:8063/plan | grep -q '<!doctype html>'
+          curl --retry 5 --retry-delay 1 -fsS 'http://127.0.0.1:8063/api/observations/pagasa?lat=40.7&lon=-74' | jq -e '.status == "not_supported"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8063/missing-file.js)" = 404

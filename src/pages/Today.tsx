@@ -22,13 +22,15 @@ import {
   WeatherIcon,
   Button,
 } from "../ui";
-import { Chart } from "./Forecast";
+import { StationObservation } from "../components/station-observation";
+import { Chart } from "../components/forecast-chart";
 
 export default function Today() {
   const { city, weather, temp, refresh, loading } = useApp();
   const [details, setDetails] = useState(false);
   const r = weather ? risk(weather.current.heatIndex) : null;
   return (
+    <>
     <ForecastGuard>
       <div className="today-layout">
         <section className="today-main">
@@ -37,7 +39,7 @@ export default function Today() {
               weekday: "short",
               day: "numeric",
               month: "short",
-              timeZone: "Asia/Manila",
+              timeZone: weather?.timezone || "Asia/Manila",
             })}{" "}
             · {city?.name}
           </p>
@@ -69,6 +71,7 @@ export default function Today() {
             </div>
           )}
           <Source compact refreshable/>
+          <Link className="source" to="/settings/data">About these estimates &amp; official sources</Link>
           <div className="today-actions">
             <ActionLink variant="primary" to="/plan">
               Plan outdoor time
@@ -152,5 +155,7 @@ export default function Today() {
         </section>
       </div>
     </ForecastGuard>
+    <StationObservation />
+    </>
   );
 }

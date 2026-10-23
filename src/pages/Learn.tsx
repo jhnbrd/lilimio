@@ -134,7 +134,7 @@ export function Article({ guide }: { guide: Guide }) {
       return;
     }
     setIds(next);
-    const text = `${guide.title}\n\nlilimio. · Heat-awareness guide\n\n${guide.intro}\n\n${guide.tips.map((t) => "• " + t).join("\n\n")}\n\nSource: ${guide.source}\nEmergency assistance: call 911.`;
+    const text = `${guide.title}\n\nlilimio. · Heat-awareness guide\n\n${guide.intro}\n\n${guide.tips.map((t) => "• " + t).join("\n\n")}\n\nSource: ${guide.source}\nEmergency assistance: call your local emergency number (911 in the Philippines and US).`;
     const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
     const a = document.createElement("a");
     a.href = url;

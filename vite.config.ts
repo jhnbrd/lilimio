@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import { cpSync } from "node:fs";
 import { createReadStream, existsSync, statSync } from "node:fs";
@@ -5,8 +7,19 @@ import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+const version = JSON.parse(readFileSync("package.json", "utf8")).version;
+let revision = process.env.APP_BUILD_SHA || "unknown";
+if (revision === "unknown") {
+  try { revision = execFileSync("git", ["rev-parse", "HEAD"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
+    if (execFileSync("git", ["status", "--porcelain", "--untracked-files=normal"], {encoding:"utf8"}).trim()) revision += "-dirty";
+  } catch { /* Source archives may omit Git. */ }
+}
+const buildInfo = { version, revision, builtAt: new Date().toISOString() };
 export default defineConfig({
+  define: { __BUILD_INFO__: JSON.stringify(buildInfo) },
   publicDir: false,
+  server: {proxy: {"/api/observations/": "http://127.0.0.1:8090"}},
+  preview: {proxy: {"/api/observations/": "http://127.0.0.1:8090"}},
   plugins: [
     {
       name: "copy-runtime-public",
@@ -37,6 +50,7 @@ export default defineConfig({
         });
       },
       generateBundle() {
+        this.emitFile({type: "asset", fileName: "build-info.json", source: JSON.stringify(buildInfo)});
         for (const file of [
           "art",
           "fonts",
@@ -60,7 +74,7 @@ export default defineConfig({
       manifest: {
         name: "lilimio. — Know the heat. Find your shade.",
         short_name: "lilimio.",
-        description: "A Philippine heat-awareness companion.",
+        description: "Know the heat. Find your shade. A heat-awareness companion.",
         lang: "en-PH",
         start_url: "/",
         scope: "/",
@@ -92,8 +106,21 @@ export default defineConfig({
         cacheId: "lilimio-react",
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
-        globPatterns: ["**/*.{js,css,html,woff2,webp,png,ico}"],
+        globPatterns: [
+          "**/*.{js,css,html,woff2}",
+          "art/{onboarding,guides,learn}.webp",
+          "images/brand/lilimio/png/wordmark-640.png",
+          "images/brand/lilimio/pwa/icon-{192,512}.png",
+        ],
+        runtimeCaching: [{
+          urlPattern: ({url}) => url.origin === self.location.origin && url.pathname.startsWith("/art/"),
+          handler: "StaleWhileRevalidate",
+          options: {cacheName: "lilimio-art-v1", expiration: {maxEntries: 12, maxAgeSeconds: 30 * 86400}},
+        }],
         globIgnores: [
+          "**/relief-map-*.js",
+          "**/relief-map-*.css",
+          "**/maplibre-gl-worker-*.js",
           "**/marketing/**",
           "**/masters/**",
           "**/source-prompts/**",

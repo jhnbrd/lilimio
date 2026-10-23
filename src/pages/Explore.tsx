@@ -65,7 +65,13 @@ export default function Explore() {
   );
   const directory = useDirectory(center, type);
   const [query, setQuery] = useState("");
-  const [view, setView] = useState("Map");
+  const [view, setView] = useState("List");
+  const [mapEnabled, setMapEnabled] = useState(false);
+  const searchArea = useCallback((area: DirectoryCenter) => {
+    setCenter(area); setSelection(null); setQuery("");
+    writeStored("lilimio-directory-center-v1", area);
+    directory.load();
+  }, [directory.load]);
   const [selection, setSelection] = useState<Place | null>(null);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -218,7 +224,7 @@ export default function Explore() {
               key={v}
               className={view === v ? "selected" : ""}
               aria-pressed={view === v}
-              onClick={() => setView(v)}
+              onClick={() => { setView(v); if (v === "Map") setMapEnabled(true); }}
             >
               {v}
             </button>
@@ -229,7 +235,7 @@ export default function Explore() {
         >
           {narrow && view === "Map" && (
             <Suspense fallback={<p className="map-loading">Loading map…</p>}>
-              <ReliefMap city={center} places={visible} onSelect={choose} />
+              <ReliefMap city={center} places={visible} onSelect={choose} onSearchArea={searchArea} />
             </Suspense>
           )}
         </div>
@@ -256,7 +262,8 @@ export default function Explore() {
                     <MapPin size={17} />
                     {p.distanceKm?.toFixed(1)} km · {p.kind}
                   </small>
-                  <small>{accessLabel(p)}</small>
+                  <small>{accessLabel(p)} · {p.osm?.openingHours ? "Hours mapped; check before travel" : "Hours unknown"}</small>
+                  <small>{p.kind === "Drinking water" ? "Water quality unverified" : p.kind === "Indoor places" ? `Cooling: ${p.osm?.airConditioning || "unknown"}` : `Shade: ${p.osm?.shade || "unknown"}`}</small>
                 </span>
                 <ChevronRight size={20} />
               </button>
@@ -307,15 +314,16 @@ export default function Explore() {
             Photon search
           </a>
           . Up to 50 places within 3 km; distances are straight-line from the
-          city centre. Search sends the selected city’s coordinates. These are
+          selected search centre. Search sends those coordinates. These are
           mapped places, not certified cooling centres. Check access, hours,
           shade, and water conditions before visiting.
         </p>
       </section>
       <section className="explore-map desktop-only">
-        {!narrow && (
+        {!narrow && !mapEnabled && <Button variant="outline" onClick={() => setMapEnabled(true)}>Load interactive map</Button>}
+        {!narrow && mapEnabled && (
           <Suspense fallback={<p className="map-loading">Loading map…</p>}>
-            <ReliefMap city={center} places={visible} onSelect={choose} />
+            <ReliefMap city={center} places={visible} onSelect={choose} onSearchArea={searchArea} />
           </Suspense>
         )}
         {(selected || visible[0]) && (
@@ -463,6 +471,7 @@ export function PlaceDetail({
             </p>
           </div>
         )}
+        <p className="muted">Check access and opening hours before travelling. {place.kind === "Drinking water" ? "A mapped water point is not a water-quality inspection." : "Mapped facilities may be unavailable or unsuitable when you arrive."}</p>
         <a
           className="button primary"
           href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`}

@@ -1,4 +1,4 @@
-export const NOTICE_VERSION = "2026-10-20";
+export const NOTICE_VERSION = "2026-10-24";
 export const STORAGE_NOTICE_KEY = "lilimio-storage-notice";
 export const INSTALL_HIDDEN_KEY = "lilimio-install-hidden";
 export const INSTALL_SESSION_KEY = "lilimio-install-session-closed";

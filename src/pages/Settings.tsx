@@ -106,17 +106,37 @@ export default function Settings() {
       <Row icon={<Download />} to="/settings/install">
         Install lilimio
       </Row>
+      <Row icon={<Info />} to="/settings/data">Weather sources & accuracy</Row>
       <ActionLink to="/settings/privacy">Privacy & data</ActionLink>
       <Row icon={<Shield />} to="/legal/terms">
         Terms, sources & licenses
       </Row>
       <p className="muted public-use-note">
         Free for public use. No account required.
+        <br />Version {__BUILD_INFO__.version} · build {__BUILD_INFO__.revision.slice(0, 7)}{__BUILD_INFO__.revision.endsWith("-dirty") ? " (local changes)" : ""}
+        <br />Built {new Date(__BUILD_INFO__.builtAt).toLocaleString()}
+        <br /><a href="/build-info.json" target="_blank" rel="noreferrer">Check server build</a>
       </p>
     </>
   );
   const content =
-    panel === "install" ? (
+    panel === "data" ? (
+      <>
+        <h1>Weather sources &amp; accuracy</h1>
+        <p className="lead">A local estimate, not a thermometer at your address.</p>
+        <div className="prose">
+          <h2>What the readings mean</h2>
+          <p>Air temperature and humidity come from Open-Meteo weather models. Heat index is calculated using the NOAA/NWS method for shade and light wind. Direct sun, buildings, elevation, clothing and activity can change your exposure.</p>
+          <p>The retrieval age tells you when this browser fetched data. The conditions time tells you when the model reading applies. Refreshing does not mean the model itself changed.</p>
+          <h2>Check official information</h2>
+          <p>For the Philippines, check <a href="https://www.pagasa.dost.gov.ph/weather/heat-index/" target="_blank" rel="noreferrer">PAGASA heat-index reports</a>. For the United States, check <a href={city ? `https://forecast.weather.gov/MapClick.php?lat=${city.latitude}&lon=${city.longitude}` : "https://www.weather.gov/"} target="_blank" rel="noreferrer">National Weather Service forecasts and alerts</a>. Elsewhere, check your national weather service. For Philippine locations, Today also shows a nearby PAGASA automatic-station reading when available, with its observation time and distance. Station readings and model estimates remain separate; official alerts are not synchronized.</p>
+          <h2>Why numbers may differ</h2>
+          <p>A station measures one place at one time; a model estimates an area. Compare the same variable and time, with the station distance and elevation in mind. A daily maximum cannot be compared directly with a current reading. Do not average conflicting readings to assume greater accuracy.</p>
+          <p>This is a heat-awareness app. It does not assess cold, storm, air-quality or other weather hazards. The planner compares forecast conditions and cannot guarantee safe exposure.</p>
+          <p><a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Open-Meteo documentation</a> · <a href="https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml" target="_blank" rel="noreferrer">NOAA heat-index method</a></p>
+        </div>
+      </>
+    ) : panel === "install" ? (
       <>
         <h1>Keep lilimio close</h1>
         <div className="install-art">
@@ -250,7 +270,7 @@ export default function Settings() {
           </p>
           <h2>External services</h2>
           <p>
-            Weather coordinates go directly to Open-Meteo. Directory city
+            Weather coordinates go directly to Open-Meteo. In the Philippine coverage area, coordinates also go to this app’s station adapter to select nearby cached PAGASA observations; the adapter does not forward those coordinates to PAGASA. Directory city
             searches use Open-Meteo / GeoNames; nearby-place searches send the
             selected city's coordinates to{" "}
             <a
@@ -318,6 +338,7 @@ export default function Settings() {
             ["/settings/install", "Install"],
             ["/settings/notifications", "Notifications"],
             ["/settings/privacy", "Privacy"],
+            ["/settings/data", "Sources & accuracy"],
             ["/legal/terms", "Terms & licenses"],
           ].map(([to, label]) => (
             <Link

@@ -5,13 +5,36 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        APP_BUILD_SHA: ${APP_BUILD_SHA:-unknown}
     image: lilimio:local
+    depends_on:
+      observations:
+        condition: service_healthy
     ports:
       - "127.0.0.1:8063:8080"
     restart: unless-stopped
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  observations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: observations
+    image: lilimio-observations:local
+    restart: unless-stopped
+    read_only: true
     cap_drop:
       - ALL
     security_opt:

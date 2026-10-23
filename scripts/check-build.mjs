@@ -1,0 +1,13 @@
+import { readFileSync, statSync } from 'node:fs';
+import assert from 'node:assert/strict';
+const sw = readFileSync('dist/sw.js', 'utf8');
+assert(!/url:"[^"]*(?:relief-map-|maplibre-gl-worker-)/.test(sw), 'Map must not be precached');
+const entries = [...sw.matchAll(/url:"([^"]+)",revision:/g)].map(m => m[1]);
+assert(entries.length > 0, 'Precache entries missing: review Workbox output format');
+const bytes = entries.reduce((sum, path) => sum + statSync(`dist/${path}`).size, 0);
+assert(bytes < 3 * 1024 * 1024, `Precache exceeds 3 MiB: ${bytes}`);
+const info = JSON.parse(readFileSync('dist/build-info.json', 'utf8'));
+assert.equal(info.version, JSON.parse(readFileSync('package.json', 'utf8')).version);
+assert(info.revision && info.builtAt);
+console.log(`Precache: ${entries.length} files, ${(bytes / 1024 / 1024).toFixed(2)} MiB`);
+console.log(`Build ${info.version} (${info.revision})`);

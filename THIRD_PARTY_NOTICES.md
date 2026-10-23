@@ -31,3 +31,7 @@ The [NOAA / NWS heat-index method](https://www.wpc.ncep.noaa.gov/html/heatindex_
 Plus Jakarta Sans is by the Plus Jakarta Sans Project Authors, under the SIL Open Font License 1.1. The complete bundled font notice appears below. Runtime dependencies retain their respective upstream licenses, including React, React Router, Motion, Anime.js, GSAP, Lucide, MapLibre GL JS and Workbox. Their complete distributed package notices are retained with the project’s dependency installation; this page is not a replacement for those licenses.
 
 The custom lilimio. wordmark, brand assets and illustration references are separate from the font and map-data licenses. No general reuse license is granted to the brand or artwork by this notice. See the [application license](/legal/license).
+
+## PAGASA PANaHON station observations
+
+Nearby Philippine automatic-station readings are retrieved from [PAGASA PANaHON](https://www.panahon.gov.ph/) through this app’s server adapter. They retain provider-reported values, station identity, distance, observation times, and automatic-station limitations. Public website availability is not a claim of an official partnership or unrestricted redistribution license. The feed is undocumented and may change; supported ongoing access and terms should be confirmed with PAGASA. See [PAGASA heat-index reports](https://www.pagasa.dost.gov.ph/weather/heat-index/) for the agency’s data-quality notices.

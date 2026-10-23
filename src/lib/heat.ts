@@ -1,3 +1,4 @@
+import { timestamp, localIso } from "./time";
 export type Hour = {
   time: string;
   temperature: number;
@@ -13,6 +14,7 @@ export type Weather = {
   hourly: Hour[];
   fetchedAt: string;
   source: string;
+  timezone?: string;
   demo?: boolean;
 };
 /** NOAA/NWS Rothfusz regression with Steadman screening and humidity adjustments. Shade/light wind only. */
@@ -91,7 +93,7 @@ export type Activity = (typeof activities)[number];
 export type Period = "Morning" | "Afternoon" | "Evening";
 export function isStale(weather: Weather, now = Date.now()) {
   const fetched = Date.parse(weather.fetchedAt),
-    model = Date.parse(weather.current.time + "+08:00");
+    model = timestamp(weather.current.time);
   return (
     !Number.isFinite(fetched) ||
     !Number.isFinite(model) ||
@@ -120,25 +122,25 @@ export function planActivity(
     Leisure: 0.8,
   }[activity];
   const windows = weather.hourly.flatMap((h, index) => {
-    const start = Date.parse(h.time + "+08:00"),
+    const start = timestamp(h.time),
       hour = Number(h.time.slice(11, 13));
     if (start < now || hour < 6 || hour > 19) return [];
     const end = start + duration * 60000;
     const span = weather.hourly
       .slice(index)
-      .filter((x) => Date.parse(x.time + "+08:00") < end);
+      .filter((x) => timestamp(x.time) < end);
     if (
       !span.length ||
       span.some(
         (x, i) =>
           i > 0 &&
-          Date.parse(x.time + "+08:00") -
-            Date.parse(span[i - 1].time + "+08:00") !==
+          timestamp(x.time) -
+            timestamp(span[i - 1].time) !==
             3600000,
       )
     )
       return [];
-    const coveredUntil = Date.parse(span.at(-1)!.time + "+08:00") + 3600000;
+    const coveredUntil = timestamp(span.at(-1)!.time) + 3600000;
     if (coveredUntil < end) return [];
     const maximum = Math.max(...span.map((x) => x.heatIndex));
     const uv = Math.max(...span.map((x) => x.uv));
@@ -157,7 +159,7 @@ export function planActivity(
     return [
       {
         time: h.time,
-        end: new Date(end).toISOString(),
+        end: localIso(end, weather.timezone || "Asia/Manila"),
         heatIndex: maximum,
         rain,
         uv,

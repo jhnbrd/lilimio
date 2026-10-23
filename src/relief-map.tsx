@@ -12,11 +12,14 @@ export default function ReliefMap({
   city,
   places,
   onSelect,
+  onSearchArea,
 }: {
   city: DirectoryCenter;
   places: Place[];
   onSelect: (p: Place) => void;
+  onSearchArea: (center: DirectoryCenter) => void;
 }) {
+  const [moved, setMoved] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -39,6 +42,9 @@ export default function ReliefMap({
         attributionControl: { compact: true },
       });
       instance.current = map;
+      setMoved(false);
+      map.on("dragend", () => setMoved(true));
+      map.on("zoomend", event => { if (event.originalEvent) setMoved(true); });
       observer = new ResizeObserver(() => map?.resize());
       observer.observe(root.current);
       map.addControl(
@@ -125,6 +131,14 @@ export default function ReliefMap({
   return (
     <div className="relief-map" aria-label={`Map around ${city.name}`}>
       <div className="map-canvas" ref={root} />
+      {moved && !failed && (
+        <button className="button outline search-map-area" onClick={() => {
+          const point = instance.current?.getCenter();
+          if (!point) return;
+          onSearchArea({name: "Map area", region: `${point.lat.toFixed(3)}, ${point.lng.toFixed(3)}`, latitude: point.lat, longitude: ((point.lng + 180) % 360 + 360) % 360 - 180});
+          setMoved(false);
+        }}>Search this area (3 km)</button>
+      )}
       {failed && (
         <div className="map-fallback" role="status">
           <Map size={32} />

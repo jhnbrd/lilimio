@@ -2,12 +2,13 @@
 
 **Know the heat. Find your shade.**
 
-A Philippine heat-awareness PWA with live forecasts, activity planning, mapped relief places, and offline safety guides.
+Know the heat wherever your day takes you. Compare forecasts, plan outdoor time, and find nearby places to cool down.
 
 **[Open the app](https://lilimio.jhnbrd.com)** · [Server operations](docs/DOCKER.md) · [Releases](docs/RELEASING.md)
 
 ## Features
 
+- Nearby PAGASA automatic-station readings for Philippine locations, with distance, timestamps, and stale/unavailable states.
 - Air temperature, estimated heat index, and three-day forecasts with source and freshness labels.
 - Experimental activity-window comparisons and locally saved plans.
 - Worldwide city search and community-mapped parks, indoor places, and drinking-water points.
@@ -24,6 +25,8 @@ Use Node.js 22.12+ (Node 24 recommended) and npm:
 npm ci
 npm run dev
 ```
+
+For PAGASA station data locally, also run `npm run observations` in a second terminal. Vite proxies `/api/observations/` to localhost:8090.
 
 Before committing:
 
@@ -50,12 +53,13 @@ The app is manually hosted on a Debian home server with Docker Compose and Nginx
 | `supabase/` | SQL foundation; no active backend connection |
 | `.old/` | Ignored recovery archive; never imported at runtime |
 
-React + TypeScript + Vite, MapLibre, Motion, Anime.js, and GSAP. Provider requests run in the browser. Plans and preferences stay in browser storage; no sign-in or analytics integration is required. `VITE_` values are public: never put secrets there.
+React + TypeScript + Vite, MapLibre, Motion, Anime.js, and GSAP. Forecast, directory, and map requests run in the browser. A small Node sidecar caches public PANaHON station observations and exposes a same-origin API. Plans and preferences stay in browser storage; no sign-in or analytics integration is required. `VITE_` values are public: never put secrets there.
 
 Official advisory synchronization, automatic Web Push, remote reports, moderation, and Supabase authentication are not connected. Local drafts do not send notifications or reports.
 
 ## Documentation
 
+- [Worldwide weather and accuracy](docs/WEATHER_ACCURACY.md)
 - [Current scope and verification history](docs/IMPLEMENTATION.md)
 - [Directory sources and limitations](docs/RELIEF_DIRECTORY.md)
 - [Animation ownership and cleanup](docs/ANIMATION_SYSTEM.md)

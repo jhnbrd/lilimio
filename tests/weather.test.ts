@@ -67,7 +67,7 @@ test("fetch uses direct provider, coordinates, three days and caller cancellatio
   });
   assert.equal(result.hourly.length, 72);
 });
-test("provider failures and out-of-region coordinates fail explicitly", async () => {
+test("provider failures and invalid coordinates fail explicitly", async () => {
   await assert.rejects(
     fetchForecast(
       cities[0],
@@ -77,8 +77,8 @@ test("provider failures and out-of-region coordinates fail explicitly", async ()
     /unavailable/,
   );
   await assert.rejects(
-    fetchForecast({ ...cities[0], latitude: 50 }, new AbortController().signal),
-    /Philippines/,
+    fetchForecast({ ...cities[0], latitude: 91 }, new AbortController().signal),
+    /latitude/,
   );
 });
 test("coordinate-specific caches do not leak forecasts between device locations", () => {

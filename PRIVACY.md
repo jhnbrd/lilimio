@@ -1,6 +1,6 @@
 # Privacy & storage
 
-Updated 20 October 2026 · Version 2026-10-20
+Updated 24 October 2026 · Version 2026-10-24
 
 ## No account required
 
@@ -15,6 +15,8 @@ Local items generally remain until removed, overwritten by newer cache entries o
 ## What leaves your device
 
 Weather requests send the chosen coordinates to Open-Meteo. If you choose device location, your browser requests permission first; resulting coordinates are used for the weather request and saved chosen location. You can choose a city manually instead. Worldwide city searches send your search text to Open-Meteo / GeoNames. Nearby-place searches send the separately selected city centre to Photon by komoot for OpenStreetMap results; weather GPS coordinates are not automatically reused for this directory.
+
+For selected weather coordinates within the Philippine coverage area, the browser also requests nearby PAGASA observations from this app’s server. The server uses those coordinates to select a station within 50 km from a cached nationwide PANaHON feed; it does not send your coordinates to PAGASA. It keeps station data in memory for a five-minute refresh cache (retaining a labeled last successful snapshot for up to 24 hours if the provider fails). It stores no location history. Query access logging is disabled for this endpoint in the supplied Nginx configuration; outer hosting/tunnel logs remain subject to their own settings.
 
 Map requests go to OpenFreeMap and its map resources. Directions open Google Maps only when chosen. Following a source link opens that provider’s website. External services and the website host receive standard connection information, such as your IP address and request details, and may keep logs under their own policies. lilimio. does not control those logs or promise that external sites use no cookies.
 

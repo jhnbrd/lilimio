@@ -1,3 +1,4 @@
+import { timestamp } from "../lib/time";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -51,7 +52,7 @@ export function validPlans(v: unknown): v is SavedPlan[] {
         ["Morning", "Afternoon", "Evening"].includes(p.period) &&
         typeof p?.city?.name === "string" &&
         typeof p?.window?.time === "string" &&
-        Number.isFinite(Date.parse(p.window.time + "+08:00")) &&
+        Number.isFinite(timestamp(p.window.time)) &&
         Number.isFinite(Date.parse(p.window.end)) &&
         Number.isFinite(p.window.heatIndex),
     )
@@ -121,7 +122,7 @@ export default function Planner() {
     ? all.find(
         (w) =>
           Math.abs(
-            Date.parse(w.time + "+08:00") - Date.parse(first.time + "+08:00"),
+            timestamp(w.time) - timestamp(first.time),
           ) >=
           3 * 3600000,
       )
@@ -320,7 +321,7 @@ export default function Planner() {
                     </span>
                     <span>
                       <small>
-                        {i === 0 ? "Suggested window" : "Alternative"} ·{" "}
+                        {i === 0 ? "Lower-score comparison" : "Alternative"} ·{" "}
                         {dateLabel(w.time)}
                       </small>
                       <strong>
@@ -333,6 +334,9 @@ export default function Planner() {
                       </small>
                       <small>
                         {temp(w.heatIndex)} peak · {w.risk.label}
+                      </small>
+                      <small>UV up to {w.uv.toFixed(1)} · rain chance up to {w.rain}%.
+                        {i > 0 && first ? ` Compared with the first option: ${Math.abs(w.heatIndex - first.heatIndex).toFixed(1)}°C ${w.heatIndex < first.heatIndex ? "lower" : "higher"} heat index; ${Math.abs(w.uv - first.uv).toFixed(1)} ${w.uv < first.uv ? "lower" : "higher"} UV.` : " Ranked by heat, effort, duration, UV, rain and your preferred period."}
                       </small>
                     </span>
                     <ChevronRight />

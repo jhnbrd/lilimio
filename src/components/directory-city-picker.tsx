@@ -112,7 +112,7 @@ export function DirectoryCityPicker({
         >
           Open-Meteo / GeoNames
         </a>
-        . Directory searches do not change your Philippine weather location.
+        . Directory searches do not change your weather location.
       </p>
     </Modal>
   );
