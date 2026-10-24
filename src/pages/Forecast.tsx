@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pager, Paged } from "../components/pagination";
 import { Chart } from "../components/forecast-chart";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -12,45 +13,29 @@ import {
 import { useApp } from "../state";
 import { type Hour, risk } from "../lib/heat";
 import { upcoming, dailyPeaks, dateLabel, timeLabel } from "../lib/weather";
-import {
-  Art,
-  ActionLink,
-  Back,
-  Button,
-  ForecastGuard,
-  Source,
-  WeatherIcon,
-  Modal,
-  CityButton,
-} from "../ui";
+import { ActionLink, ForecastGuard, Source, WeatherIcon, Modal } from "../ui";
 
 export default function Forecast() {
   const { weather, temp } = useApp();
   const [params, setParams] = useSearchParams();
   const tab = params.get("tab") || "hourly";
+  const [detailTab, setDetailTab] = useState("Heat");
   const [selected, setSelected] = useState<Hour | null>(null);
-  const [all, setAll] = useState(false);
-  const hours = weather ? upcoming(weather) : [];
-  const shown = hours.filter((_, i) => i % 2 === 0).slice(0, 5);
+  const [page, setPage] = useState(0);
+  const hours = weather ? upcoming(weather).slice(0, 24) : [];
+  const shown = hours.slice(page * 3, page * 3 + 3);
   return (
     <>
-      <Back to="/" />
-      <h1>Heat-index forecast</h1>
-      <div className="mobile-only">
-        <CityButton />
-      </div>
+      <h1>Heat forecast</h1>
+
       <p className="lead desktop-only">
         Hourly estimates to help you plan your day.
       </p>
       <Source />
-      <ForecastGuard>
+      <ForecastGuard compact>
         <div className="forecast-layout">
           <section>
-            <div
-              className="tabs mobile-only"
-              role="group"
-              aria-label="Forecast view"
-            >
+            <div className="tabs" role="group" aria-label="Forecast view">
               <button
                 aria-pressed={tab === "hourly"}
                 className={tab === "hourly" ? "selected" : ""}
@@ -68,13 +53,15 @@ export default function Forecast() {
             </div>
             <div
               className={
-                tab === "daily" ? "hourly-pane desktop-only" : "hourly-pane"
+                tab === "daily" ? "hourly-pane hidden-pane" : "hourly-pane"
               }
             >
               <h2>Upcoming hourly estimates</h2>
-              <Chart hours={shown} onSelect={setSelected} />
+              <div key={shown[0]?.time} className="forecast-chart-wrap">
+                <Chart hours={shown} onSelect={setSelected} />
+              </div>
               <div className="hour-list">
-                {(all ? hours.slice(0, 24) : hours.slice(0, 2)).map((h) => (
+                {shown.map((h) => (
                   <button
                     className="forecast-row"
                     key={h.time}
@@ -94,37 +81,39 @@ export default function Forecast() {
                   </button>
                 ))}
               </div>
-              <Button variant="text" onClick={() => setAll((v) => !v)}>
-                {all ? "Show fewer hours" : "View all upcoming hours"}
-                <ArrowRight size={20} />
-              </Button>
+              <Pager
+                page={page}
+                count={Math.ceil(hours.length / 3)}
+                onChange={setPage}
+                label="Hours"
+              />
               <p className="muted">
                 Forecast estimates, not live observations.
               </p>
             </div>
           </section>
           <section
-            className={`daily-pane ${tab === "hourly" ? "desktop-only" : ""}`}
+            className={`daily-pane ${tab === "hourly" ? "hidden-pane" : ""}`}
           >
             <h2>Daily peak heat index</h2>
-            <p className="muted">Highest estimated heat index each day.</p>
-            {weather &&
-              dailyPeaks(weather).map((day) => (
-                <button
-                  className="forecast-row"
-                  key={day.date}
-                  onClick={() => setSelected(day.hour)}
-                >
-                  <span>{dateLabel(day.date)}</span>
-                  <WeatherIcon code={day.hour.code} />
-                  <strong>{temp(day.hour.heatIndex)}</strong>
-                  <ArrowRight size={20} />
-                </button>
-              ))}
-            <Art scene="sun" />
-            <p className="muted">
-              Peak calculated from complete days of hourly estimates.
-            </p>
+            <p className="muted">Estimated daily maximum.</p>
+            <Paged label="Days">
+              {weather &&
+                dailyPeaks(weather).map((day) => (
+                  <button
+                    className="forecast-row"
+                    key={day.date}
+                    onClick={() => setSelected(day.hour)}
+                  >
+                    <span>{dateLabel(day.date)}</span>
+                    <WeatherIcon code={day.hour.code} />
+                    <strong>{temp(day.hour.heatIndex)}</strong>
+                    <ArrowRight size={20} />
+                  </button>
+                ))}
+            </Paged>
+
+            <p className="muted">Daily peaks use complete days.</p>
             <ActionLink variant="primary" to="/plan">
               Compare outdoor times
             </ActionLink>
@@ -141,32 +130,48 @@ export default function Forecast() {
           onClose={() => setSelected(null)}
         >
           <div className="hour-detail">
-            <Art scene="sun" />
-            <div className="reading">{temp(selected.heatIndex)}</div>
-            <p>Estimated heat index</p>
-            <div className="risk-label warm">
-              <TriangleAlert />
-              <strong>{risk(selected.heatIndex).label}</strong>
+            <div className="tabs" role="group" aria-label="Forecast details">
+              {["Heat", "Weather", "Sources"].map((value) => (
+                <button
+                  key={value}
+                  aria-pressed={detailTab === value}
+                  onClick={() => setDetailTab(value)}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
-            <div className="metrics">
-              <div>
-                <Thermometer />
-                Air temperature<strong>{temp(selected.temperature)}</strong>
+            {detailTab === "Heat" && (
+              <>
+                <div className="reading">{temp(selected.heatIndex)}</div>
+                <p>Estimated heat index</p>
+                <div className="risk-label warm">
+                  <TriangleAlert />
+                  <strong>{risk(selected.heatIndex).label}</strong>
+                </div>
+              </>
+            )}
+            {detailTab === "Weather" && (
+              <div className="metrics">
+                <div>
+                  <Thermometer />
+                  Air temperature<strong>{temp(selected.temperature)}</strong>
+                </div>
+                <div>
+                  <Droplets />
+                  Humidity<strong>{selected.humidity}%</strong>
+                </div>
+                <div>
+                  <Sun />
+                  UV index<strong>{selected.uv}</strong>
+                </div>
+                <div>
+                  <Wind />
+                  Wind<strong>{selected.wind} km/h</strong>
+                </div>
               </div>
-              <div>
-                <Droplets />
-                Humidity<strong>{selected.humidity}%</strong>
-              </div>
-              <div>
-                <Sun />
-                UV index<strong>{selected.uv}</strong>
-              </div>
-              <div>
-                <Wind />
-                Wind<strong>{selected.wind} km/h</strong>
-              </div>
-            </div>
-            <Source />
+            )}
+            {detailTab === "Sources" && <Source full />}
             <ActionLink variant="primary" to="/plan">
               Compare outdoor times
             </ActionLink>

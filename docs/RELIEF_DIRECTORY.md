@@ -2,7 +2,7 @@
 
 The directory uses existing OpenStreetMap data via [Photon](https://github.com/komoot/photon), with international city search through [Open-Meteo / GeoNames](https://open-meteo.com/en/docs/geocoding-api). No account, API key, paid subscription or backend service was provisioned.
 
-In Find relief, select a city using the location button, then choose **Find nearby places**. A new city selection searches automatically. The text field filters loaded place names and addresses. Selecting a category performs a bounded category-specific query when necessary, so a dense park dataset does not crowd water points out of the result limit.
+In Find relief, select a city using the location button, then choose **Find nearby places**. A new city selection searches automatically. **Filter places** opens the text and category controls; text filters loaded names and addresses. Selecting a category performs a bounded category-specific query when necessary, so a dense park dataset does not crowd water points out of the result limit.
 
 ## Data contract
 
@@ -36,3 +36,7 @@ Overpass was evaluated first. Private.coffee and other tested Overpass endpoints
 Unit tests cover bounded international queries, category isolation, real OSM identities, coordinate/response validation, explicit access exclusions, no invented cooling/shade/hours, failure/cancellation, country-disambiguated city search and bookmark migration/persistence. Browser checks used actual Davao and London responses, including a category-specific London drinking-water query and saved-record reload. Provider test fixtures are confined to tests and never used as runtime fallback data.
 
 Final automated checks: 30 tests passed, `npm run typecheck` passed, and `npm run build` passed. Existing large-map-chunk/shared-forecast-import build warnings remain.
+
+## Optional photos
+
+Place details can look for a photo explicitly linked to that OSM record, with author and license attribution. The existing server sidecar handles this lookup; maps and directory search retain their existing providers. See [the photo contract](DESIGN_SYSTEM.md#place-photos). Provider failure and an absent linked photo remain distinct; neither produces a stock image.

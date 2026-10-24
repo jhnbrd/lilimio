@@ -1,5 +1,8 @@
 import {
   useEffect,
+  lazy,
+  Suspense,
+  useId,
   useRef,
   useState,
   type ReactNode,
@@ -20,7 +23,6 @@ import {
   CloudRain,
   TriangleAlert,
   RefreshCw,
-  BookOpen,
   Cloud,
   Moon,
 } from "lucide-react";
@@ -28,14 +30,17 @@ import { useApp } from "./state";
 import { cities, type City } from "./lib/data";
 import { isStale } from "./lib/heat";
 import { freshnessLabel } from "./lib/time";
-import { searchDirectoryCities } from "./lib/directory";
+import { LOCATION_DISCLAIMER, searchLocations } from "./lib/locations";
 import { dateLabel } from "./lib/weather";
+import { Paged } from "./components/pagination";
+
+const LocationMap = lazy(() => import("./components/location-map"));
 
 const scenes = {
-  heat: {src:"today",box:"284 217 517 193"},
-  mobileHeat:{src:"daily",box:"350 248 153 177"},
-  foliage:{src:"guides",box:"180 638 335 220"},
-  corner:{src:"settings",box:"1100 0 436 520"},
+  heat: { src: "today", box: "284 217 510 193" },
+  mobileHeat: { src: "daily", box: "350 248 153 177" },
+  foliage: { src: "guides", box: "180 638 335 220" },
+  corner: { src: "settings", box: "1100 0 436 520" },
   bottom: { src: "today", box: "0 810 1536 178" },
   sun: { src: "forecast", box: "1090 532 414 152" },
   planner: { src: "plan", box: "0 750 760 274" },
@@ -191,6 +196,25 @@ export function Modal({
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const { motionPreference } = useApp();
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  function close() {
+    if (closing) return;
+    if (
+      motionPreference === "reduced" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      onClose();
+      return;
+    }
+    setClosing(true);
+    closeTimer.current = setTimeout(onClose, 140);
+  }
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
   useEffect(() => {
     const old = document.activeElement as HTMLElement;
     const dialog = ref.current;
@@ -206,27 +230,27 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className="dialog"
+      className={`dialog ${closing ? "dialog-closing" : ""}`}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        close();
       }}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) close();
       }}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
     >
       <div className="dialog-header">
-        <h2 id="dialog-title">{title}</h2>
+        <h2 id={titleId}>{title}</h2>
         <button
           className="icon-button"
-          onClick={onClose}
+          onClick={close}
           aria-label="Close dialog"
         >
           <X />
         </button>
       </div>
-      {children}
+      <div className="dialog-content">{children}</div>
     </dialog>
   );
 }
@@ -241,6 +265,7 @@ export function CityPicker({
 }) {
   const [query, setQuery] = useState("");
   const [locating, setLocating] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [error, setError] = useState("");
   const active = useRef(true);
   useEffect(() => {
@@ -253,23 +278,51 @@ export function CityPicker({
   const [searching, setSearching] = useState(false);
   useEffect(() => {
     setRemoteCities([]);
-    if (query.trim().length < 3) { setSearching(false); return; }
+    setSearching(false);
+    setError("");
+    if (query.trim().length < 3) return;
     const controller = new AbortController();
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     const timer = setTimeout(() => {
-      setSearching(true); setError("");
-      const timeout = setTimeout(() => { controller.abort(); setSearching(false); setError("City search timed out. Try again."); }, 12000);
-      searchDirectoryCities(query, controller.signal).then(results => {
-        if (!controller.signal.aborted) setRemoteCities(results.map(c => ({...c, id: `city-${c.latitude}-${c.longitude}`})));
-      }).catch(() => { if (!controller.signal.aborted) setError("City search unavailable. Try again or use your location."); })
-        .finally(() => { clearTimeout(timeout); if (!controller.signal.aborted) setSearching(false); });
-    }, 500);
-    return () => { clearTimeout(timer); controller.abort(); };
+      setSearching(true);
+      timeout = setTimeout(() => {
+        controller.abort();
+        setSearching(false);
+        setError(
+          "Location search is taking too long. Try adding a city, use your location, or choose on the map.",
+        );
+      }, 10000);
+      searchLocations(query, controller.signal)
+        .then((results) => {
+          if (!controller.signal.aborted) setRemoteCities(results);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted)
+            setError(
+              "Location search unavailable. Try again or use your location.",
+            );
+        })
+        .finally(() => {
+          clearTimeout(timeout);
+          if (!controller.signal.aborted) setSearching(false);
+        });
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, [query]);
   const results = [
     ...remoteCities,
-    ...cities.filter(c =>
-      !remoteCities.some(r => r.latitude === c.latitude && r.longitude === c.longitude) &&
-      (c.name + " " + c.region).toLowerCase().includes(query.trim().toLowerCase()),
+    ...cities.filter(
+      (c) =>
+        !remoteCities.some(
+          (r) => r.latitude === c.latitude && r.longitude === c.longitude,
+        ) &&
+        (c.name + " " + c.region)
+          .toLowerCase()
+          .includes(query.trim().toLowerCase()),
     ),
   ];
   function locate() {
@@ -285,7 +338,8 @@ export function CityPicker({
         setLocating(false);
         const { latitude, longitude } = pos.coords;
         if (
-          !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+          !Number.isFinite(latitude) ||
+          !Number.isFinite(longitude) ||
           latitude < -90 ||
           latitude > 90 ||
           longitude < -180 ||
@@ -310,13 +364,23 @@ export function CityPicker({
           );
         }
       },
-      { timeout: 10000, maximumAge: 300000 },
+      { timeout: 15000, maximumAge: 60000, enableHighAccuracy: true },
     );
   }
+  if (showMap)
+    return (
+      <Suspense fallback={<p role="status">Loading location map…</p>}>
+        <LocationMap
+          initial={chosen || cities[0]}
+          onChoose={onChoose}
+          onBack={() => setShowMap(false)}
+        />
+      </Suspense>
+    );
   return (
     <div className="city-picker">
       <label className="field-label" htmlFor="city-search">
-        City
+        Location
       </label>
       <div className="search-field">
         <Search size={23} />
@@ -324,35 +388,39 @@ export function CityPicker({
           id="city-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search a city"
+          placeholder="City, barangay, district or street"
           autoComplete="off"
         />
       </div>
       <p className="muted">
-        Search cities worldwide, or use your device location.
+        Search worldwide. Include the city or country to narrow results.
       </p>
       <div className="city-results">
-        {results.map((c) => (
-          <button
-            key={c.id}
-            className={`city-option ${chosen?.id === c.id ? "selected" : ""}`}
-            onClick={() => onChoose(c)}
-          >
-            <MapPin size={22} />
-            <span>
-              {c.name}
-              <small>{c.region}</small>
-            </span>
-            {chosen?.id === c.id ? (
-              <span aria-label="Selected">●</span>
-            ) : (
-              <ChevronRight size={20} />
-            )}
-          </button>
-        ))}
+        <Paged label="Cities">
+          {results.map((c) => (
+            <button
+              key={c.id}
+              className={`city-option ${chosen?.id === c.id ? "selected" : ""}`}
+              onClick={() => onChoose(c)}
+            >
+              <MapPin size={22} />
+              <span>
+                {c.name}
+                <small>{c.region}</small>
+              </span>
+              {chosen?.id === c.id ? (
+                <span aria-label="Selected">●</span>
+              ) : (
+                <ChevronRight size={20} />
+              )}
+            </button>
+          ))}
+        </Paged>
         {!results.length && (
           <p>
-            {searching ? "Searching cities…" : "No city matches. Try another spelling or use device location."}
+            {searching
+              ? "Searching locations…"
+              : "No location matches. Try adding a city, or choose a map pin."}
           </p>
         )}
       </div>
@@ -360,9 +428,13 @@ export function CityPicker({
         <LocateFixed size={21} />
         {locating ? "Finding your location…" : "Use my location"}
       </Button>
+      <Button variant="outline" onClick={() => setShowMap(true)}>
+        Choose on map <MapPin size={21} />
+      </Button>
+      <p className="muted">{LOCATION_DISCLAIMER}</p>
       <p className="muted">
-        Location is optional. Coordinates are sent to Open-Meteo for your
-        forecast.
+        Search text goes to Photon / OpenStreetMap. Location is optional.
+        Coordinates are sent to Open-Meteo for your forecast.
       </p>
       {error && (
         <p role="alert" className="error-text">
@@ -380,47 +452,94 @@ export function CityPicker({
 export function CityButton() {
   const { city, setChooser } = useApp();
   return (
-    <button className="city-button" onClick={() => setChooser(true)}>
+    <button
+      className="city-button"
+      aria-label={`Change location: ${city?.name || "Choose your city"}`}
+      title={city?.name || "Choose your city"}
+      onClick={() => setChooser(true)}
+    >
       <MapPin size={24} />
       <span>{city?.name || "Choose your city"}</span>
       <ChevronDown size={21} />
     </button>
   );
 }
-export function Source({ full = false, compact = false, refreshable = false }: { full?: boolean; compact?: boolean; refreshable?: boolean }) {
+export function Source({
+  full = false,
+  compact = false,
+  refreshable = false,
+}: {
+  full?: boolean;
+  compact?: boolean;
+  refreshable?: boolean;
+}) {
   const { weather, loading, refresh, city, online, error } = useApp();
+  void compact;
   const [, setClock] = useState(0);
-  useEffect(() => { const timer = setInterval(() => setClock(n => n + 1), 60000); return () => clearInterval(timer); }, []);
+  useEffect(() => {
+    const timer = setInterval(() => setClock((n) => n + 1), 60000);
+    return () => clearInterval(timer);
+  }, []);
   return (
-    <p className="source" aria-live="polite">
-      {city?.name} · Open-Meteo model estimate ·{" "}
-      {loading
-        ? "Refreshing forecast…"
-        : weather
-        ? `${freshnessLabel(weather.fetchedAt)}${!online ? " · Offline saved reading" : error ? " · Refresh failed; saved reading" : isStale(weather) ? " · Out of date; refresh before planning" : ""}`
-        : "Forecast not loaded"}
-      {refreshable && (
-        <button className="source-refresh" type="button" onClick={refresh} disabled={loading} aria-label={loading ? "Refreshing forecast" : "Refresh forecast"} aria-busy={loading} title="Refresh forecast">
-          <RefreshCw size={18} aria-hidden />
-        </button>
+    <>
+      <p className="source" aria-live="polite">
+        {full
+          ? `${city?.name} · Open-Meteo model estimate · `
+          : "Open-Meteo estimate · "}
+        {loading
+          ? "Refreshing…"
+          : weather
+            ? freshnessLabel(weather.fetchedAt)
+            : "Not loaded"}
+        {weather &&
+          (!online
+            ? " · Offline saved data"
+            : error
+              ? " · Refresh failed"
+              : isStale(weather)
+                ? " · Out of date"
+                : "")}
+        {refreshable && (
+          <button
+            className="source-refresh"
+            onClick={refresh}
+            disabled={loading}
+            aria-label="Refresh forecast"
+          >
+            <RefreshCw size={18} />
+          </button>
+        )}
+        {weather && full && (
+          <>
+            <br />
+            Conditions:{" "}
+            {dateLabel(weather.current.time, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}{" "}
+            · {weather.timezone || "Asia/Manila"}. Model estimates, not station
+            observations.
+          </>
+        )}
+      </p>
+      {full && (
+        <p className="location-accuracy-note">
+          Area forecast, not a street-level measurement. Local conditions vary.
+        </p>
       )}
-      {weather && (
-        <>
-          <br />
-          Conditions time:{" "}
-          {dateLabel(weather.current.time, {
-            day: "numeric",
-            month: "short",
-            hour: "numeric",
-            minute: "2-digit",
-          })}
-           · {weather.timezone || "Asia/Manila"}. Not station observations.
-        </>
-      )}
-    </p>
+    </>
   );
 }
-export function ForecastGuard({ children }: { children: ReactNode }) {
+
+export function ForecastGuard({
+  children,
+  compact = false,
+}: {
+  children: ReactNode;
+  compact?: boolean;
+}) {
   const { city, setChooser, weather, loading, error, refresh, online } =
     useApp();
   if (!city)
@@ -463,33 +582,17 @@ export function ForecastGuard({ children }: { children: ReactNode }) {
     );
   return (
     <>
-      {isStale(weather) && (
-        <div className="warning" role="status">
-          <TriangleAlert size={24} />
-          <div>
-            <strong>Outdated data</strong>
-            <p>
-              Saved{" "}
-              {dateLabel(weather.fetchedAt, {
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-              . Current comparisons are unavailable.
-            </p>
-            <button onClick={refresh} disabled={loading}>{loading ? "Refreshing…" : "Refresh forecast"}</button>
-          </div>
-        </div>
-      )}
-      {error && (
-        <div className="warning" role="alert">
-          <TriangleAlert size={24} />
-          <div>
-            <strong>Couldn’t refresh the forecast</strong>
-            <p>{error} Showing the last saved readings; check their update time.</p>
-            <button onClick={refresh} disabled={loading}>{loading ? "Refreshing…" : "Try again"}</button>
-          </div>
+      {!compact && (isStale(weather) || error) && (
+        <div className="warning compact-warning" role="status">
+          <TriangleAlert size={20} />
+          <span>
+            {isStale(weather)
+              ? "Out-of-date forecast"
+              : "Refresh failed · saved forecast"}
+          </span>
+          <button onClick={refresh} disabled={loading}>
+            Retry
+          </button>
         </div>
       )}
       {children}

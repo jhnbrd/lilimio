@@ -37,3 +37,9 @@ gh workflow run record-manual-deployment.yml -f deployed_ref=<verified-server-co
 The workflow resolves the selected revision, creates a production deployment record, and marks it successful with **https://lilimio.jhnbrd.com** as its environment URL. The description and payload identify it as an owner-reported manual deployment. The success state records the operator's attestation, not independent verification of the server's revision or availability.
 
 It runs only on manual dispatch: no push, tag, or release automatically claims a deployment. It uses `GITHUB_TOKEN` with contents-read and deployments-write permissions; no server credentials are needed. It performs no SSH, Docker, file upload, or hosting operation. The custom deployment task is `record-manual-deployment` so the record is distinguishable from deployment requests.
+
+## Staging v0.4.0 for manual deployment
+
+Source is committed and pushed to `main`; the GitHub release remains a draft until the owner confirms the server update. Prepare it using `gh release create v0.4.0 --draft --target <release-commit-sha> --title "lilimio. v0.4.0 — A clearer view of the heat" --notes-file docs/releases/v0.4.0.md`. Do not publish the draft or dispatch the deployment workflow yet.
+
+After the owner reports the running `build-info.json` version/revision and healthy Compose services, publish the draft for that verified commit and run `record-manual-deployment.yml` with its full SHA. The production entry points to https://lilimio.jhnbrd.com and records an already completed manual deployment. If the server revision differs, resolve that mismatch first.

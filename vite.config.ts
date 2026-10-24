@@ -10,16 +10,39 @@ import { VitePWA } from "vite-plugin-pwa";
 const version = JSON.parse(readFileSync("package.json", "utf8")).version;
 let revision = process.env.APP_BUILD_SHA || "unknown";
 if (revision === "unknown") {
-  try { revision = execFileSync("git", ["rev-parse", "HEAD"], {encoding: "utf8", stdio: ["ignore", "pipe", "ignore"]}).trim();
-    if (execFileSync("git", ["status", "--porcelain", "--untracked-files=normal"], {encoding:"utf8"}).trim()) revision += "-dirty";
-  } catch { /* Source archives may omit Git. */ }
+  try {
+    revision = execFileSync("git", ["rev-parse", "HEAD"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (
+      execFileSync(
+        "git",
+        ["status", "--porcelain", "--untracked-files=normal"],
+        { encoding: "utf8" },
+      ).trim()
+    )
+      revision += "-dirty";
+  } catch {
+    /* Source archives may omit Git. */
+  }
 }
 const buildInfo = { version, revision, builtAt: new Date().toISOString() };
 export default defineConfig({
   define: { __BUILD_INFO__: JSON.stringify(buildInfo) },
   publicDir: false,
-  server: {proxy: {"/api/observations/": "http://127.0.0.1:8090"}},
-  preview: {proxy: {"/api/observations/": "http://127.0.0.1:8090"}},
+  server: {
+    proxy: {
+      "/api/observations/": "http://127.0.0.1:8090",
+      "/api/places/": "http://127.0.0.1:8090",
+    },
+  },
+  preview: {
+    proxy: {
+      "/api/observations/": "http://127.0.0.1:8090",
+      "/api/places/": "http://127.0.0.1:8090",
+    },
+  },
   plugins: [
     {
       name: "copy-runtime-public",
@@ -50,7 +73,11 @@ export default defineConfig({
         });
       },
       generateBundle() {
-        this.emitFile({type: "asset", fileName: "build-info.json", source: JSON.stringify(buildInfo)});
+        this.emitFile({
+          type: "asset",
+          fileName: "build-info.json",
+          source: JSON.stringify(buildInfo),
+        });
         for (const file of [
           "art",
           "fonts",
@@ -74,7 +101,8 @@ export default defineConfig({
       manifest: {
         name: "lilimio. — Know the heat. Find your shade.",
         short_name: "lilimio.",
-        description: "Know the heat. Find your shade. A heat-awareness companion.",
+        description:
+          "Know the heat. Find your shade. A heat-awareness companion.",
         lang: "en-PH",
         start_url: "/",
         scope: "/",
@@ -112,15 +140,23 @@ export default defineConfig({
           "images/brand/lilimio/png/wordmark-640.png",
           "images/brand/lilimio/pwa/icon-{192,512}.png",
         ],
-        runtimeCaching: [{
-          urlPattern: ({url}) => url.origin === self.location.origin && url.pathname.startsWith("/art/"),
-          handler: "StaleWhileRevalidate",
-          options: {cacheName: "lilimio-art-v1", expiration: {maxEntries: 12, maxAgeSeconds: 30 * 86400}},
-        }],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              url.pathname.startsWith("/art/"),
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "lilimio-art-v1",
+              expiration: { maxEntries: 12, maxAgeSeconds: 30 * 86400 },
+            },
+          },
+        ],
         globIgnores: [
           "**/relief-map-*.js",
           "**/relief-map-*.css",
           "**/maplibre-gl-worker-*.js",
+          "**/maplibre-gl-worker-*.css",
           "**/marketing/**",
           "**/masters/**",
           "**/source-prompts/**",

@@ -1,3 +1,5 @@
+import { Modal } from "../ui";
+import { Paged } from "./pagination";
 import { useState, useId, useEffect } from "react";
 import { useApp } from "../state";
 import type { Hour } from "../lib/heat";
@@ -9,6 +11,7 @@ export function Chart({
   hours: Hour[];
   onSelect?: (h: Hour) => void;
 }) {
+  const [valuesOpen, setValuesOpen] = useState(false);
   const [narrow, setNarrow] = useState(window.innerWidth < 768);
   useEffect(() => {
     const media = window.matchMedia("(max-width:767px)");
@@ -103,32 +106,45 @@ export function Chart({
           </g>
         ))}
       </svg>
-      <details className="chart-values">
-        <summary>Read chart values</summary>
-        {hours.map((h) => (
-          <div className="chart-value" key={h.time}>
-            {onSelect ? (
-              <button onClick={() => onSelect(h)}>
-                {dateLabel(h.time, {
-                  weekday: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                : {temp(h.heatIndex)}
-              </button>
-            ) : (
-              <span>
-                {dateLabel(h.time, {
-                  weekday: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                : {temp(h.heatIndex)}
-              </span>
-            )}
-          </div>
-        ))}
-      </details>
+      <div className="chart-values">
+        <button className="button text" onClick={() => setValuesOpen(true)}>
+          Read chart values
+        </button>
+      </div>
+      {valuesOpen && (
+        <Modal title="Chart values" onClose={() => setValuesOpen(false)}>
+          <Paged label="Chart values">
+            {hours.map((h) => (
+              <div className="chart-value" key={h.time}>
+                {onSelect ? (
+                  <button
+                    onClick={() => {
+                      setValuesOpen(false);
+                      onSelect(h);
+                    }}
+                  >
+                    {dateLabel(h.time, {
+                      weekday: "short",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                    : {temp(h.heatIndex)}
+                  </button>
+                ) : (
+                  <span>
+                    {dateLabel(h.time, {
+                      weekday: "short",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                    : {temp(h.heatIndex)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </Paged>
+        </Modal>
+      )}
     </div>
   );
 }

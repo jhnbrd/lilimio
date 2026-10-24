@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Paged, Pager } from "../components/pagination";
+import { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
 import {
   Search,
   Droplets,
@@ -7,10 +8,8 @@ import {
   ShieldCheck,
   Sun,
   Download,
-  ArrowRight,
   ChevronRight,
   BookOpen,
-  Bookmark,
   Pause,
   CalendarDays,
   Trash2,
@@ -44,9 +43,7 @@ function downloaded() {
 export default function Learn() {
   const { id } = useParams();
   const [query, setQuery] = useState("");
-  const [all, setAll] = useState(false);
   const [selection, setSelection] = useState("outdoors");
-  const navigate = useNavigate();
   const guide = guides.find((g) => g.id === (id || selection));
   const matches = guides.filter((g) =>
     (labels[g.id] + " " + g.title + " " + g.category)
@@ -82,37 +79,36 @@ export default function Learn() {
           />
         </div>
         <div className="guide-links">
-          {(all || query
-            ? matches
-            : matches.filter((g) =>
-                ["illness", "hydration", "outdoors"].includes(g.id),
-              )
-          ).map((g, i) => {
-            const Icon = icons[i % icons.length];
-            return (
-              <div key={g.id}>
-                <button
-                  className={`row desktop-only ${selection === g.id ? "selected" : ""}`}
-                  onClick={() => setSelection(g.id)}
-                >
-                  <Icon className="row-icon" />
-                  <span className="row-copy">{labels[g.id]}</span>
-                  <ChevronRight size={22} />
-                </button>
-                <Link className="row mobile-only" to={`/learn/${g.id}`}>
-                  <Icon className="row-icon" />
-                  <span className="row-copy">{labels[g.id]}</span>
-                  <ChevronRight size={22} />
-                </Link>
-              </div>
-            );
-          })}
+          <Paged key={query} label="Guides">
+            {matches.map((g, i) => {
+              const Icon = icons[i % icons.length];
+              return (
+                <div key={g.id}>
+                  <button
+                    className={`row desktop-only ${selection === g.id ? "selected" : ""}`}
+                    onClick={() => setSelection(g.id)}
+                  >
+                    <Icon className="row-icon" />
+                    <span className="row-copy">
+                      <span>{labels[g.id]}</span>
+                      <small className="guide-summary">{g.subtitle}</small>
+                    </span>
+                    <ChevronRight size={22} />
+                  </button>
+                  <Link className="row mobile-only" to={`/learn/${g.id}`}>
+                    <Icon className="row-icon" />
+                    <span className="row-copy">
+                      <span>{labels[g.id]}</span>
+                      <small className="guide-summary">{g.subtitle}</small>
+                    </span>
+                    <ChevronRight size={22} />
+                  </Link>
+                </div>
+              );
+            })}
+          </Paged>
           {!matches.length && <p>No guides match. Try “water” or “outdoor”.</p>}
         </div>
-        <Button variant="text" onClick={() => setAll((v) => !v)}>
-          {all ? "Fewer guides" : "All guides"}
-          <ChevronRight size={22} />
-        </Button>
         <Row icon={<Download />} to="/downloads">
           Offline downloads
         </Row>
@@ -125,6 +121,8 @@ export default function Learn() {
 }
 export function Article({ guide }: { guide: Guide }) {
   const { notify } = useApp();
+  const [section, setSection] = useState(0);
+  useEffect(() => setSection(0), [guide.id]);
   const [ids, setIds] = useState(downloaded);
   const saved = ids.includes(guide.id);
   function download() {
@@ -149,17 +147,18 @@ export function Article({ guide }: { guide: Guide }) {
         <Back to="/learn" />
       </div>
       <h1>{guide.id === "outdoors" ? "Stay cool outdoors" : guide.title}</h1>
-      <p className="lead desktop-only">{guide.intro}</p>
+
       <Art
         scene="guide"
         className="guide-cover"
         label="Illustration of a hat and water bottle in the shade"
       />
       <div className="guide-tips">
-        {guide.tips.map((tip, i) => {
+        {[guide.intro, ...guide.tips].slice(section, section + 1).map((tip) => {
+          const i = Math.max(0, section - 1);
           const Icon =
             guide.id === "outdoors"
-              ? [CalendarDays, Droplets, Pause, ShieldCheck][i]
+              ? [CalendarDays, Droplets, Pause, ShieldCheck][i % 4]
               : icons[i % icons.length];
           const titles =
             guide.id === "outdoors"
@@ -176,13 +175,19 @@ export function Article({ guide }: { guide: Guide }) {
                 <Icon size={26} />
               </span>
               <div>
-                {titles[i] && <h3>{titles[i]}</h3>}
+                {section > 0 && titles[i] && <h3>{titles[i]}</h3>}
                 <p>{tip}</p>
               </div>
             </div>
           );
         })}
       </div>
+      <Pager
+        page={section}
+        count={guide.tips.length + 1}
+        onChange={setSection}
+        label="Section"
+      />
       <div className="article-footer">
         <p className="source">
           Source: WHO ·{" "}
@@ -217,23 +222,25 @@ export function Downloads() {
       <h1>Downloaded guides</h1>
       <p className="lead">Saved for offline reading on this device.</p>
       {ids.length ? (
-        ids.map((id) => {
-          const g = guides.find((g) => g.id === id)!;
-          return (
-            <div className="download-row" key={id}>
-              <Row icon={<BookOpen />} to={`/learn/${id}`}>
-                {g.title}
-              </Row>
-              <button
-                className="icon-button danger-text"
-                aria-label={`Remove ${g.title}`}
-                onClick={() => remove(id)}
-              >
-                <Trash2 size={21} />
-              </button>
-            </div>
-          );
-        })
+        <Paged label="Downloads">
+          {ids.map((id) => {
+            const g = guides.find((g) => g.id === id)!;
+            return (
+              <div className="download-row" key={id}>
+                <Row icon={<BookOpen />} to={`/learn/${id}`}>
+                  {g.title}
+                </Row>
+                <button
+                  className="icon-button danger-text"
+                  aria-label={`Remove ${g.title}`}
+                  onClick={() => remove(id)}
+                >
+                  <Trash2 size={21} />
+                </button>
+              </div>
+            );
+          })}
+        </Paged>
       ) : (
         <div className="empty-state">
           <Download size={35} />

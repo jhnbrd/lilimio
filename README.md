@@ -11,7 +11,8 @@ Know the heat wherever your day takes you. Compare forecasts, plan outdoor time,
 - Nearby PAGASA automatic-station readings for Philippine locations, with distance, timestamps, and stale/unavailable states.
 - Air temperature, estimated heat index, and three-day forecasts with source and freshness labels.
 - Experimental activity-window comparisons and locally saved plans.
-- Worldwide city search and community-mapped parks, indoor places, and drinking-water points.
+- Worldwide city, street, barangay and district search, optional GPS and map-pin selection.
+- Community-mapped parks, indoor places and drinking-water points around a chosen location.
 - Searchable safety guides, offline reading, installation, and update prompts.
 - Responsive layouts, Celsius/Fahrenheit, and reduced-motion preferences.
 

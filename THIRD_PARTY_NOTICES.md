@@ -35,3 +35,7 @@ The custom lilimio. wordmark, brand assets and illustration references are separ
 ## PAGASA PANaHON station observations
 
 Nearby Philippine automatic-station readings are retrieved from [PAGASA PANaHON](https://www.panahon.gov.ph/) through this app’s server adapter. They retain provider-reported values, station identity, distance, observation times, and automatic-station limitations. Public website availability is not a claim of an official partnership or unrestricted redistribution license. The feed is undocumented and may change; supported ongoing access and terms should be confirmed with PAGASA. See [PAGASA heat-index reports](https://www.pagasa.dost.gov.ph/weather/heat-index/) for the agency’s data-quality notices.
+
+## Optional place photographs
+
+Place photos are resolved through an exact OpenStreetMap record’s Wikimedia Commons file link or Wikidata P18 statement, using the read-only Overpass service. [Wikidata structured data](https://www.wikidata.org/wiki/Wikidata:Licensing) is available under CC0; photographs have their own individual licenses. The app requests [Commons image metadata](https://www.mediawiki.org/wiki/API:Imageinfo) and displays an author credit, original file link and license link beside every accepted photo. Missing attribution or unsupported reuse metadata prevents display. Photo availability and association do not verify current facilities. The app does not assert ownership or general public-domain status for Commons photographs.

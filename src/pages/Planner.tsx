@@ -1,3 +1,4 @@
+import { Paged } from "../components/pagination";
 import { timestamp } from "../lib/time";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -9,15 +10,13 @@ import {
   Sun,
   Thermometer,
   CalendarDays,
-  Info,
   Bookmark,
-  Check,
   MapPin,
   Trash2,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { cities,type Place } from "../lib/data";
-import {readSavedPlaces,saveDirectoryPlace} from '../lib/directory-storage';
+import { cities, type Place } from "../lib/data";
+import { readSavedPlaces, saveDirectoryPlace } from "../lib/directory-storage";
 import { useApp, validCity } from "../state";
 import {
   activities,
@@ -28,7 +27,7 @@ import {
 } from "../lib/heat";
 import { dateLabel, timeLabel } from "../lib/weather";
 import { readStored, writeStored } from "../lib/storage";
-import { ActionLink, Art, Back, Button, Modal, Source } from "../ui";
+import { ActionLink, Art, Button, Modal, Source } from "../ui";
 
 type Window = ReturnType<typeof planActivity>[number];
 export type SavedPlan = {
@@ -121,10 +120,7 @@ export default function Planner() {
   const alternative = first
     ? all.find(
         (w) =>
-          Math.abs(
-            timestamp(w.time) - timestamp(first.time),
-          ) >=
-          3 * 3600000,
+          Math.abs(timestamp(w.time) - timestamp(first.time)) >= 3 * 3600000,
       )
     : undefined;
   const options = [first, alternative].filter((w): w is Window => !!w);
@@ -148,7 +144,9 @@ export default function Planner() {
       requestAnimationFrame(() => {
         const result = document.getElementById("plan-results");
         result?.focus({ preventScroll: true });
-        document.getElementById("main")?.scrollTo({ top: 0, behavior: reduce ? "instant" : "smooth" });
+        document
+          .getElementById("main")
+          ?.scrollTo({ top: 0, behavior: reduce ? "instant" : "smooth" });
       });
   }
   function save() {
@@ -261,12 +259,17 @@ export default function Planner() {
             initial={reduce ? false : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <button className="back" onClick={() => setCompared(false)}>
-              ← Edit activity
-            </button>
-            <h2>Your outdoor options</h2>
+            <div className="result-heading">
+              <h2>Outdoor options</h2>
+              <button
+                className="button text"
+                onClick={() => setCompared(false)}
+              >
+                Edit
+              </button>
+            </div>
             <p className="muted">
-              {activity} · {duration} minutes · {city?.name}
+              {activity} · {duration} minutes
             </p>
             {!weather || stale ? (
               <div className="empty-state">
@@ -306,92 +309,107 @@ export default function Planner() {
               </div>
             ) : (
               <>
-                {options.map((w, i) => (
-                  <button
-                    className={`window-option ${selected === i ? "selected" : ""}`}
-                    key={w.time}
-                    onClick={() => setSelected(i)}
+                <Paged label="Options">
+                  {options.map((w, i) => (
+                    <button
+                      className={`window-option ${selected === i ? "selected" : ""}`}
+                      key={w.time}
+                      onClick={() => {
+                        setSelected(i);
+                        setDetails(true);
+                      }}
+                      aria-haspopup="dialog"
+                    >
+                      <span className="window-icon">
+                        {i === 0 ? (
+                          <Sun size={44} className="sun-icon" />
+                        ) : (
+                          <Clock size={36} />
+                        )}
+                      </span>
+                      <span>
+                        <small>
+                          {i === 0 ? "Option 1" : "Option 2"} ·{" "}
+                          {dateLabel(w.time)}
+                        </small>
+                        <strong>
+                          {timeLabel(w.time)} – {timeLabel(w.end)}
+                        </strong>
+                        <small>
+                          {w.preferred
+                            ? `Within your preferred ${period.toLowerCase()}.`
+                            : `Outside your preferred ${period.toLowerCase()}.`}
+                        </small>
+                        <small>
+                          {temp(w.heatIndex)} peak · {w.risk.label}
+                        </small>
+                        <small className="window-weather">
+                          UV {w.uv.toFixed(1)} · {w.rain}% rain chance
+                        </small>
+                      </span>
+                      <ChevronRight />
+                    </button>
+                  ))}
+                </Paged>
+
+                {details && (
+                  <Modal
+                    title="Why these times?"
+                    onClose={() => setDetails(false)}
                   >
-                    <span className="window-icon">
-                      {i === 0 ? (
-                        <Sun size={44} className="sun-icon" />
-                      ) : (
-                        <Clock size={36} />
-                      )}
-                    </span>
-                    <span>
-                      <small>
-                        {i === 0 ? "Lower-score comparison" : "Alternative"} ·{" "}
-                        {dateLabel(w.time)}
-                      </small>
-                      <strong>
-                        {timeLabel(w.time)} – {timeLabel(w.end)}
-                      </strong>
-                      <small>
-                        {w.preferred
-                          ? `Within your preferred ${period.toLowerCase()}.`
-                          : `Outside your preferred ${period.toLowerCase()}.`}
-                      </small>
-                      <small>
-                        {temp(w.heatIndex)} peak · {w.risk.label}
-                      </small>
-                      <small>UV up to {w.uv.toFixed(1)} · rain chance up to {w.rain}%.
-                        {i > 0 && first ? ` Compared with the first option: ${Math.abs(w.heatIndex - first.heatIndex).toFixed(1)}°C ${w.heatIndex < first.heatIndex ? "lower" : "higher"} heat index; ${Math.abs(w.uv - first.uv).toFixed(1)} ${w.uv < first.uv ? "lower" : "higher"} UV.` : " Ranked by heat, effort, duration, UV, rain and your preferred period."}
-                      </small>
-                    </span>
-                    <ChevronRight />
-                  </button>
-                ))}
-                <details
-                  className="reasons"
-                  open={details}
-                  onToggle={(e) => setDetails(e.currentTarget.open)}
-                >
-                  <summary>
-                    <Info />
+                    <Paged size={1} label="Reason">
+                      <div className="reason-row">
+                        <Thermometer />
+                        <div>
+                          <h3>Heat conditions</h3>
+                          <p>
+                            {temp(chosen.heatIndex)} maximum estimated heat
+                            index during this window.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="reason-row">
+                        <Sun className="sun-icon" />
+                        <div>
+                          <h3>UV and rain</h3>
+                          <p>
+                            UV index up to {chosen.uv.toFixed(1)}. Rain
+                            probability up to {chosen.rain}%.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="reason-row">
+                        <CalendarDays />
+                        <div>
+                          <h3>Your preferred schedule</h3>
+                          <p>
+                            {chosen.preferred ? "Within" : "Outside"} your
+                            preferred {period.toLowerCase()}.
+                          </p>
+                        </div>
+                      </div>
+                      <ActionLink to="/forecast">View forecast</ActionLink>
+                      <p>
+                        The experimental score weighs heat, effort, duration,
+                        UV, rain and your preferred period. This comparison
+                        cannot guarantee safe exposure.
+                      </p>
+                    </Paged>
+                  </Modal>
+                )}
+                <p className="comparison-note">Not a safety guarantee.</p>
+                <Source compact />
+                <div className="result-actions">
+                  <Button onClick={save}>
+                    Save plan <Bookmark size={20} />
+                  </Button>
+                  <Button
+                    variant="text"
+                    onClick={() => setDetails(true)}
+                  >
                     Why these times?
-                  </summary>
-                  <div className="reason-row">
-                    <Thermometer />
-                    <div>
-                      <h3>Heat conditions</h3>
-                      <p>
-                        {temp(chosen.heatIndex)} maximum estimated heat index
-                        during this window.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="reason-row">
-                    <Sun className="sun-icon" />
-                    <div>
-                      <h3>UV and rain</h3>
-                      <p>
-                        UV index up to {chosen.uv.toFixed(1)}. Rain probability
-                        up to {chosen.rain}%.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="reason-row">
-                    <CalendarDays />
-                    <div>
-                      <h3>Your preferred schedule</h3>
-                      <p>
-                        {chosen.preferred ? "Within" : "Outside"} your preferred{" "}
-                        {period.toLowerCase()}.
-                      </p>
-                    </div>
-                  </div>
-                </details>
-                <p className="muted">
-                  A comparison of forecast conditions, not a safety guarantee.
-                  The experimental score weighs heat, activity, duration, UV,
-                  rain and your preferred period.
-                </p>
-                <Source />
-                <Button onClick={save}>
-                  Save plan <Bookmark size={20} />
-                </Button>
-                <ActionLink to="/forecast">View forecast</ActionLink>
+                  </Button>
+                </div>
               </>
             )}
           </motion.div>
@@ -439,6 +457,8 @@ export default function Planner() {
   );
 }
 export function Saved() {
+  const [tab, setTab] = useState("Plans");
+  const [detail, setDetail] = useState<SavedPlan | null>(null);
   const { notify, refresh, temp, setCity, setChooser } = useApp();
   const [savedPlaces, setSavedPlaces] = useState(readSavedPlaces);
   function recheck(p: SavedPlan) {
@@ -453,9 +473,9 @@ export function Saved() {
       notify("Choose the saved plan’s location to recheck.");
     }
   }
-  function unsavePlace(place:Place) {
-    if (saveDirectoryPlace(place,false)) setSavedPlaces(readSavedPlaces());
-    else notify('This place could not be removed.');
+  function unsavePlace(place: Place) {
+    if (saveDirectoryPlace(place, false)) setSavedPlaces(readSavedPlaces());
+    else notify("This place could not be removed.");
   }
   const [plans, setPlans] = useState(() =>
     readStored<SavedPlan[]>(planKey, [], validPlans),
@@ -469,99 +489,138 @@ export function Saved() {
   }
   return (
     <>
-      <Back to="/settings" />
-      <h1>Saved plans</h1>
-      <p className="lead">Your outdoor plans, kept on this device.</p>
-      {!plans.length ? (
-        <div className="empty-state">
-          <Bookmark size={36} />
-          <h2>No plans saved yet</h2>
-          <p>Compare outdoor times and save a window to find it here.</p>
-          <ActionLink variant="primary" to="/plan">
-            Plan outdoor time
-          </ActionLink>
-        </div>
-      ) : (
-        <div className="saved-plans">
-          {plans.map((p) => (
-            <article className="saved-plan" key={p.id}>
-              <div className="section-top">
-                <h2>{p.activity}</h2>
-                <Bookmark fill="currentColor" />
-              </div>
-              <strong>
-                {dateLabel(p.window.time)} · {timeLabel(p.window.time)} –{" "}
-                {timeLabel(p.window.end)}
-              </strong>
-              <p>
-                <MapPin size={19} />
-                {p.city.name} · {p.duration} minutes
-              </p>
-              <p className="muted">
-                {Date.parse(p.window.end) < Date.now() ? "Past plan · " : ""}
-                Original estimate: {temp(p.window.heatIndex)}. Forecast saved{" "}
-                {dateLabel(p.forecastTime, {
-                  day: "numeric",
-                  month: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-                .
-              </p>
-              <Art scene="planner" />
-              <Link
-                className="button primary"
-                to="/forecast"
-                onClick={() => recheck(p)}
-              >
-                Recheck forecast <ArrowRight size={20} />
-              </Link>
-              <ActionLink variant="outline" to="/plan">
-                Edit activity
-              </ActionLink>
-              <Button
-                className="danger-text"
-                variant="text"
-                onClick={() => remove(p.id)}
-              >
-                <Trash2 size={18} />
-                Remove plan
-              </Button>
-            </article>
-          ))}
-        </div>
+      <h1>Saved on this device</h1>
+      <div className="tabs" role="group" aria-label="Saved type">
+        {["Plans", "Places", "Reading"].map((value) => (
+          <button
+            key={value}
+            aria-pressed={tab === value}
+            onClick={() => setTab(value)}
+          >
+            {value}
+          </button>
+        ))}
+      </div>
+      {tab === "Reading" && (
+        <ActionLink to="/downloads">Downloaded guides</ActionLink>
       )}
-      <section className="saved-places">
-        <h2>Saved places</h2>
-        {savedPlaces.length ? (
-          savedPlaces.map((place) => {
-            const id=place.id;
-            return place ? (
-              <div className="saved-place-line" key={id}>
-                <Link className="row" to={`/explore/${id}`}>
-                  <MapPin />
-                  <span className="row-copy">
-                    {place.name}
-                    <small>{place.osm?'OpenStreetMap · recheck access and hours':'Unverified starter listing'}</small>
-                  </span>
-                  <ChevronRight />
-                </Link>
-                <button
-                  className="icon-button danger-text"
-                  onClick={() => unsavePlace(place)}
-                  aria-label={`Remove ${place.name}`}
-                >
-                  <Trash2 size={20} />
-                </button>
-              </div>
-            ) : null;
-          })
-        ) : (
-          <p className="muted">
-            Places you save in Find relief will appear here.
+      {tab === "Plans" && (
+        <>
+          {!plans.length ? (
+            <div className="empty-state">
+              <Bookmark size={36} />
+              <h2>No plans saved yet</h2>
+              <p>Compare outdoor times and save a window to find it here.</p>
+              <ActionLink variant="primary" to="/plan">
+                Plan outdoor time
+              </ActionLink>
+            </div>
+          ) : (
+            <div className="saved-plans">
+              <Paged size={1} label="Plans">
+                {plans.map((p) => (
+                  <button
+                    className="row saved-plan-summary"
+                    key={p.id}
+                    onClick={() => setDetail(p)}
+                  >
+                    <Bookmark size={22} />
+                    <span className="row-copy">
+                      <strong>
+                        {p.activity} · {p.city.name}
+                      </strong>
+                      <small>
+                        {dateLabel(p.window.time)} · {timeLabel(p.window.time)}{" "}
+                        – {timeLabel(p.window.end)}
+                      </small>
+                    </span>
+                    <ChevronRight size={20} />
+                  </button>
+                ))}
+              </Paged>
+            </div>
+          )}
+        </>
+      )}
+      {detail && (
+        <Modal title={detail.activity} onClose={() => setDetail(null)}>
+          <p>
+            {detail.city.name} · {detail.duration} minutes
           </p>
-        )}
-      </section>
+          <p>
+            {dateLabel(detail.window.time)} · {timeLabel(detail.window.time)} –{" "}
+            {timeLabel(detail.window.end)}
+          </p>
+          <p>
+            {Date.parse(detail.window.end) < Date.now() ? "Past plan. " : ""}
+            Original estimate: {temp(detail.window.heatIndex)}. Saved{" "}
+            {dateLabel(detail.forecastTime, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+            . Recheck before heading out.
+          </p>
+          <Link
+            className="button primary"
+            to="/forecast"
+            onClick={() => recheck(detail)}
+          >
+            Recheck forecast
+          </Link>
+          <ActionLink to="/plan">Edit activity</ActionLink>
+          <Button
+            className="danger-text"
+            variant="text"
+            onClick={() => {
+              remove(detail.id);
+              setDetail(null);
+            }}
+          >
+            Remove plan
+          </Button>
+        </Modal>
+      )}
+      {tab === "Places" && (
+        <section className="saved-places">
+          <h2>Saved places</h2>
+          {savedPlaces.length ? (
+            <Paged label="Places">
+              {savedPlaces.map((place) => {
+                const id = place.id;
+                return place ? (
+                  <div className="saved-place-line" key={id}>
+                    <Link className="row" to={`/explore/${id}`}>
+                      <MapPin />
+                      <span className="row-copy">
+                        {place.name}
+                        <small>
+                          {place.osm
+                            ? "OpenStreetMap · recheck access and hours"
+                            : "Unverified starter listing"}
+                        </small>
+                      </span>
+                      <ChevronRight />
+                    </Link>
+                    <button
+                      className="icon-button danger-text"
+                      onClick={() => unsavePlace(place)}
+                      aria-label={`Remove ${place.name}`}
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                ) : null;
+              })}
+            </Paged>
+          ) : (
+            <p className="muted">
+              Places you save in Find relief will appear here.
+            </p>
+          )}
+        </section>
+      )}
     </>
   );
 }

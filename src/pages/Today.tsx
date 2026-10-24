@@ -1,161 +1,131 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  TriangleAlert,
-  MapPin,
-  Footprints,
-  Thermometer,
-  Droplets,
-  Wind,
-  Sun,
-  RefreshCw,
-} from "lucide-react";
+import { Thermometer, Droplets, Wind, Sun, TriangleAlert } from "lucide-react";
 import { useApp } from "../state";
-import { risk, isStale } from "../lib/heat";
-import { upcoming, dateLabel } from "../lib/weather";
-import {
-  Art,
-  ActionLink,
-  ForecastGuard,
-  Source,
-  WeatherIcon,
-  Button,
-} from "../ui";
+import { risk } from "../lib/heat";
+import { upcoming } from "../lib/weather";
+import { Art, ActionLink, ForecastGuard, Source, Modal } from "../ui";
 import { StationObservation } from "../components/station-observation";
 import { Chart } from "../components/forecast-chart";
-
 export default function Today() {
-  const { city, weather, temp, refresh, loading } = useApp();
+  const { weather, temp, units } = useApp();
+  const [detailTab, setDetailTab] = useState("Guidance");
   const [details, setDetails] = useState(false);
   const r = weather ? risk(weather.current.heatIndex) : null;
   return (
-    <>
-    <ForecastGuard>
-      <div className="today-layout">
-        <section className="today-main">
-          <p className="eyebrow desktop-only">
-            {new Date().toLocaleDateString("en-PH", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              timeZone: weather?.timezone || "Asia/Manila",
-            })}{" "}
-            · {city?.name}
-          </p>
-          <h1>
-            <span className="mobile-only">Today’s heat</span>
-            <span className="desktop-only">Today’s heat outlook</span>
-          </h1>
-          <div className="heat-scene">
-            <Art scene="heat" className="desktop-only"/><Art scene="mobileHeat" className="mobile-only"/>
-            <div className="reading">
-              {weather ? temp(weather.current.heatIndex) : "—"}
-            </div>
-            <p>Estimated heat index</p>
-            {weather && (
-              <p className="current-air-temperature">
-                <Thermometer size={20} aria-hidden="true" />
-                <span>Air temperature</span>
-                <strong>{temp(weather.current.temperature)}</strong>
-              </p>
-            )}
-          </div>
-          {r && (
-            <div className={`risk-label ${r.tone}`}>
-              <TriangleAlert size={34} />
-              <div>
-                <strong>{r.label}</strong>
-                <p className="desktop-only">{r.guidance}</p><p className="mobile-only">{r.tone==="green"?"Keep water nearby. Recheck before heading out.":weather&&weather.current.heatIndex>=52?"Avoid exertion. Move to a cool place.":weather&&weather.current.heatIndex>=42?"Limit outdoor activity. Take cooling breaks.":"Plan shade and cooling breaks."}</p>
+    <div className="today-screen">
+      <ForecastGuard compact>
+        <div className="today-layout">
+          <section className="today-main">
+            <p className="eyebrow">A little awareness. A cooler day.</p>
+            <h1>Today’s heat</h1>
+            <div className={`heat-scene units-${units}`}>
+              <Art scene="heat" className="heat-backdrop" />
+              <div className="reading">
+                {weather ? temp(weather.current.heatIndex) : "—"}
               </div>
+              <p>Estimated heat index</p>
+              <p className="current-air-temperature">
+                <Thermometer size={20} /> Air temperature{" "}
+                <strong>{weather && temp(weather.current.temperature)}</strong>
+              </p>
             </div>
-          )}
-          <Source compact refreshable/>
-          <Link className="source" to="/settings/data">About these estimates &amp; official sources</Link>
-          <div className="today-actions">
-            <ActionLink variant="primary" to="/plan">
-              Plan outdoor time
-            </ActionLink>
-            <ActionLink to="/explore">
-              <MapPin size={23} />
-              Find relief
-            </ActionLink>
-            <ActionLink className="mobile-only" to="/forecast">
-              View full forecast
-            </ActionLink>
+            {r && (
+              <button
+                className={`risk-label ${r.tone}`}
+                onClick={() => setDetails(true)}
+                aria-label={`${r.label}. Read heat guidance`}
+              >
+                <TriangleAlert size={24} />
+                <span>
+                  <strong>{r.label}</strong>
+                  <small>
+                    {weather!.current.heatIndex >= 42
+                      ? "Limit exertion. Take cooling breaks."
+                      : "Keep water nearby. Plan cooling breaks."}
+                  </small>
+                </span>
+              </button>
+            )}
+            <Source compact />
+            <div className="today-actions">
+              <ActionLink variant="primary" to="/plan">
+                Plan outdoor time
+              </ActionLink>
+              <ActionLink variant="outline" to="/forecast">
+                Forecast
+              </ActionLink>
+            </div>
+          </section>
+          <section className="today-side">
+            <h2>The hours ahead</h2>
+            {weather && (
+              <Chart
+                hours={upcoming(weather)
+                  .filter((_, i) => i % 2 === 0)
+                  .slice(0, 4)}
+              />
+            )}
+            <ActionLink to="/forecast">Explore the forecast</ActionLink>
+            <div className="quiet-panel">
+              <h2>Find your next cool stop</h2>
+              <p>Browse nearby parks, indoor places and drinking water.</p>
+              <ActionLink to="/explore">Find relief nearby</ActionLink>
+            </div>
+          </section>
+        </div>
+      </ForecastGuard>
+      <StationObservation />
+      {details && (
+        <Modal title="Your heat outlook" onClose={() => setDetails(false)}>
+          <div className="tabs" role="group" aria-label="Heat details">
+            {["Guidance", "Weather", "Sources"].map((value) => (
+              <button
+                key={value}
+                aria-pressed={detailTab === value}
+                onClick={() => setDetailTab(value)}
+              >
+                {value}
+              </button>
+            ))}
           </div>
-        </section>
-        <section className="today-side">
-          <div className="section-top">
-            <h2>Upcoming heat index</h2>
-            <ActionLink to="/forecast">View full forecast</ActionLink>
-          </div>
-          {weather && (
-            <Chart
-              hours={upcoming(weather)
-                .filter((_, i) => i % 2 === 0)
-                .slice(0, 5)}
-            />
+          {detailTab === "Guidance" && (
+            <>
+              <p>{r?.guidance}</p>
+              <p>
+                Heat index describes shade and light wind. Sun, clothing and
+                activity change your exposure.
+              </p>
+            </>
           )}
-          <div className="next-step">
-            <h2>Your next step</h2>
-            <Link className="next-row" to="/plan">
-              <span className="circle-icon">
-                <Footprints size={30} />
+          {detailTab === "Weather" && weather && (
+            <div className="detail-grid">
+              <span>
+                <Thermometer />
+                Air temperature
+                <strong>{temp(weather.current.temperature)}</strong>
               </span>
               <span>
-                <strong>Compare times for an outdoor activity</strong>
-                <small>See cooler times and plan around the heat.</small>
+                <Droplets />
+                Humidity<strong>{weather.current.humidity}%</strong>
               </span>
-              <ArrowRight size={24} />
-            </Link>
-          </div>
-          <details
-            className="weather-details"
-            open={details}
-            onToggle={(e) => setDetails(e.currentTarget.open)}
-          >
-            <summary>
-              <Thermometer />
-              Weather details
-            </summary>
-            {weather && (
-              <>
-                <div className="detail-grid">
-                  <span>
-                    <Thermometer />
-                    Air temperature
-                    <strong>{temp(weather.current.temperature)}</strong>
-                  </span>
-                  <span>
-                    <Droplets />
-                    Humidity<strong>{weather.current.humidity}%</strong>
-                  </span>
-                  <span>
-                    <Wind />
-                    Wind<strong>{weather.current.wind} km/h</strong>
-                  </span>
-                  <span>
-                    <Sun />
-                    UV index<strong>{weather.current.uv}</strong>
-                  </span>
-                </div>
-                <Source full />
-                <p className="muted">
-                  Heat index describes shade and light wind. Direct sunlight,
-                  clothing and activity affect your exposure.
-                </p>
-                <Button variant="text" onClick={refresh} disabled={loading}>
-                  <RefreshCw size={18} />
-                  {loading ? "Refreshing…" : "Refresh forecast"}
-                </Button>
-              </>
-            )}
-          </details>
-        </section>
-      </div>
-    </ForecastGuard>
-    <StationObservation />
-    </>
+              <span>
+                <Wind />
+                Wind<strong>{weather.current.wind} km/h</strong>
+              </span>
+              <span>
+                <Sun />
+                UV index<strong>{weather.current.uv}</strong>
+              </span>
+            </div>
+          )}
+          {detailTab === "Sources" && (
+            <>
+              <Source full refreshable />
+              <ActionLink to="/settings/data">Sources & accuracy</ActionLink>
+            </>
+          )}
+        </Modal>
+      )}
+    </div>
   );
 }

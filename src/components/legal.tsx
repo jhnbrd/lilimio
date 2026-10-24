@@ -1,3 +1,4 @@
+import { ReadingSections } from "./pagination";
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import terms from "../../TERMS.md?raw";
@@ -40,22 +41,25 @@ function inline(text: string) {
   });
 }
 export function LegalText({ document }: { document: LegalDocument }) {
+  const text =
+    legalDocuments[document].text +
+    (document === "sources"
+      ? "\n\n## Complete Plus Jakarta Sans font license\n\n" + fontLicense
+      : "");
   return (
-    <div className="legal-prose">
-      {legalDocuments[document].text
-        .split(/\r?\n\r?\n/)
-        .filter(Boolean)
-        .map((block, i) => {
-          if (block.startsWith("# ")) return null;
-          if (block.startsWith("## ")) return <h2 key={i}>{block.slice(3)}</h2>;
-          return <p key={i}>{inline(block.replace(/\r?\n/g, " "))}</p>;
-        })}
-      {document === "sources" && (
-        <details>
-          <summary>Complete Plus Jakarta Sans font license</summary>
-          <pre>{fontLicense}</pre>
-        </details>
-      )}
+    <div className="legal-prose" key={document}>
+      <ReadingSections>
+        {text
+          .split(/\r?\n\r?\n/)
+          .filter((block) => block.trim() && !block.startsWith("# "))
+          .map((block, i) =>
+            block.startsWith("## ") ? (
+              <h2 key={i}>{block.slice(3)}</h2>
+            ) : (
+              <p key={i}>{inline(block.replace(/\r?\n/g, " "))}</p>
+            ),
+          )}
+      </ReadingSections>
     </div>
   );
 }

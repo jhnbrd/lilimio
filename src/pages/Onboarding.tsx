@@ -18,9 +18,9 @@ export default function Onboarding() {
     useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+  const [choosingCity, setChoosingCity] = useState(false);
   const [legal, setLegal] = useState<LegalDocument | null>(null);
   const [agreed, setAgreed] = useState(false);
-  const [destination, setDestination] = useState("/");
   useEffect(() => {
     const h = document.querySelector<HTMLElement>(".onboarding-copy h1");
     h?.setAttribute("tabindex", "-1");
@@ -34,7 +34,7 @@ export default function Onboarding() {
         "You can continue. Your agreement could not be saved on this device.",
       );
     completeOnboarding();
-    navigate(destination, { replace: true });
+    navigate("/", { replace: true });
   }
   return (
     <div className="onboarding-shell">
@@ -58,18 +58,23 @@ export default function Onboarding() {
           </div>
         </header>
         <motion.div
+          className="onboarding-stage"
           key={step}
           initial={reduce ? false : { opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.22 }}
         >
-          <WelcomeMotion>
+          <WelcomeMotion className="onboarding-scene">
             <div className="onboarding-art landscape">
               <Art
                 scene={step === 0 ? "welcome" : step === 1 ? "city" : "ready"}
               />
             </div>
-            <section className="onboarding-copy welcome-copy">
+            <main
+              id="main"
+              tabIndex={-1}
+              className="onboarding-copy welcome-copy"
+            >
               {step === 0 ? (
                 <>
                   <h1>
@@ -81,7 +86,7 @@ export default function Onboarding() {
                   <Button onClick={() => setStep(1)}>
                     Get started <ArrowRight size={21} />
                   </Button>
-                  <Button variant="text" onClick={() => setStep(2)}>
+                  <Button variant="text" onClick={() => navigate("/learn")}>
                     Explore first
                   </Button>
                 </>
@@ -89,17 +94,13 @@ export default function Onboarding() {
                 <>
                   <h1>Where’s your day?</h1>
                   <p>Choose a city for your heat outlook.</p>
-                  <CityPicker
-                    chosen={city}
-                    onChoose={(c) => {
-                      setCity(c);
-                      setStep(2);
-                    }}
-                    onBrowse={() => {
-                      setDestination("/learn");
-                      setStep(2);
-                    }}
-                  />
+                  <Button onClick={() => setChoosingCity(true)}>
+                    <MapPin size={20} />
+                    {city ? `Change ${city.name}` : "Choose a city"}
+                  </Button>
+                  <Button variant="text" onClick={() => setStep(2)}>
+                    Choose later
+                  </Button>
                 </>
               ) : (
                 <>
@@ -142,32 +143,48 @@ export default function Onboarding() {
                     </button>
                   </div>
                   <Button onClick={finish} disabled={!agreed}>
-                    {destination === "/learn"
-                      ? "Open safety guides"
-                      : "Open lilimio"}{" "}
-                    <ArrowRight size={21} />
+                    Open lilimio <ArrowRight size={21} />
                   </Button>
                   <p className="muted agreement-note">
-                    Location, notifications and installation stay optional. You
-                    can also <Link to="/learn">read safety guides</Link> without
-                    completing setup.
+                    Location and installation are optional.{" "}
+                    <Link to="/learn">Read guides without setup.</Link>
                   </p>
                 </>
               )}
-            </section>
+            </main>
           </WelcomeMotion>
         </motion.div>
         <footer className="onboarding-legal">
-          <p>Free for public use. No account needed.</p>
-          <LegalLinks onSelect={setLegal} />
+          <span>Free. No account needed.</span>
+          <button onClick={() => setLegal("terms")}>Legal & privacy</button>
         </footer>
       </div>
       <Art scene="bottom" className="onboarding-bottom" />
+      {choosingCity && (
+        <Modal
+          title="Your local outlook"
+          onClose={() => setChoosingCity(false)}
+        >
+          <CityPicker
+            chosen={city}
+            onChoose={(chosen) => {
+              setCity(chosen);
+              setChoosingCity(false);
+              setStep(2);
+            }}
+            onBrowse={() => {
+              setChoosingCity(false);
+              setStep(2);
+            }}
+          />
+        </Modal>
+      )}
       {legal && (
         <Modal
           title={legalDocuments[legal].title}
           onClose={() => setLegal(null)}
         >
+          <LegalLinks onSelect={setLegal} />
           <LegalText document={legal} />
           <Button variant="outline" onClick={() => setLegal(null)}>
             Back to setup

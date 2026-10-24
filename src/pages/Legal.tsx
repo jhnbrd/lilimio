@@ -1,13 +1,13 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Back } from "../ui";
 import { useApp } from "../state";
 import {
   LegalText,
-  LegalLinks,
   legalDocuments,
   type LegalDocument,
 } from "../components/legal";
 export default function Legal() {
+  const navigate = useNavigate();
   const { document } = useParams();
   const { onboarded } = useApp();
   const key: LegalDocument =
@@ -20,9 +20,23 @@ export default function Legal() {
         to={onboarded ? "/settings" : "/welcome"}
         label={onboarded ? "Settings" : "Welcome"}
       />
-      <p className="eyebrow">Free for public use · No account required</p>
+
       <h1>{legalDocuments[key].title}</h1>
-      <LegalLinks />
+      <label className="sr-only" htmlFor="legal-document">
+        Document
+      </label>
+      <select
+        id="legal-document"
+        className="document-select"
+        value={key}
+        onChange={(event) => navigate(`/legal/${event.target.value}`)}
+      >
+        {Object.entries(legalDocuments).map(([id, value]) => (
+          <option key={id} value={id}>
+            {value.title}
+          </option>
+        ))}
+      </select>
       <LegalText document={key} />
       <footer className="article-footer">
         <Link to="/settings/privacy">Manage local data</Link>

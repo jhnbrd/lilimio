@@ -20,12 +20,10 @@ import {
   MoreHorizontal,
   Monitor,
   WifiOff,
-  Bookmark,
 } from "lucide-react";
 import { AppProvider, useApp } from "./state";
 import { PwaProvider } from "./pwa";
 import { Art, Wordmark, CityButton, CityPicker, Modal, ActionLink } from "./ui";
-import { readStored } from "./lib/storage";
 import { RouteMotion } from "./motion";
 import Today from "./pages/Today";
 import Onboarding from "./pages/Onboarding";
@@ -48,8 +46,8 @@ const navigation = [
   { to: "/", name: "Today", icon: House },
   { to: "/forecast", name: "Forecast", icon: BarChart3 },
   { to: "/plan", name: "Plan", icon: CalendarDays },
-  { to: "/explore", name: "Explore", icon: MapPin },
-  { to: "/learn", name: "Learn", icon: BookOpen },
+  { to: "/explore", name: "Find relief", icon: MapPin },
+  { to: "/learn", name: "Guides", icon: BookOpen },
   { to: "/updates", name: "Updates", icon: Bell },
 ];
 function Shell() {
@@ -65,6 +63,34 @@ function Shell() {
     motionPreference,
     onboarded,
   } = useApp();
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => {
+      if (viewport.scale !== 1) return; // Keep pinch zoom under browser control.
+      document.documentElement.style.setProperty(
+        "--visual-height",
+        `${viewport.height}px`,
+      );
+      document.documentElement.style.setProperty(
+        "--visual-offset",
+        `${viewport.offsetTop}px`,
+      );
+      document.documentElement.dataset.keyboard = String(
+        window.innerHeight - viewport.height > 120,
+      );
+    };
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      document.documentElement.style.removeProperty("--visual-height");
+      document.documentElement.style.removeProperty("--visual-offset");
+      delete document.documentElement.dataset.keyboard;
+    };
+  }, []);
   const onboarding = location.pathname === "/welcome";
   useEffect(() => {
     document.title = `${onboarding ? "Welcome" : navigation.find((n) => n.to === location.pathname)?.name || "Your day"} · lilimio.`;

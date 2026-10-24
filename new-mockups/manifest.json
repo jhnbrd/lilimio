@@ -1,0 +1,137 @@
+{
+  "created": "2026-10-24",
+  "tool": "built-in image_gen",
+  "status": "design references for v0.4.0; implementation includes subsequent refinements",
+  "boards": [
+    {
+      "title": "Today, forecast and station details",
+      "file": "mobile/01-today-forecast-station-v2.png",
+      "width": 1476,
+      "height": 1066,
+      "bytes": 1617632,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Plan setup, comparisons and saved plans",
+      "file": "mobile/02-planner-comparison-saved.png",
+      "width": 1476,
+      "height": 1065,
+      "bytes": 1457436,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Relief map, paged list and place detail",
+      "file": "mobile/03-relief-map-list-place-v2.png",
+      "width": 1476,
+      "height": 1066,
+      "bytes": 1786583,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Guide library, paginated reading and updates",
+      "file": "mobile/04-guides-reader-updates.png",
+      "width": 1476,
+      "height": 1065,
+      "bytes": 1595310,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "More, settings and installation",
+      "file": "mobile/05-more-settings-install.png",
+      "width": 1476,
+      "height": 1066,
+      "bytes": 1422713,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Onboarding and location selection",
+      "file": "mobile/06-onboarding-location-consent.png",
+      "width": 1475,
+      "height": 1066,
+      "bytes": 1516764,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Offline recovery, updates and compact dialogs",
+      "file": "mobile/07-offline-notices-and-pickers-v2.png",
+      "width": 1476,
+      "height": 1066,
+      "bytes": 1520363,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Compact-height Today, guides and settings",
+      "file": "mobile/08-compact-viewport.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1340505,
+      "format": "PNG",
+      "role": "mobile-board",
+      "sample_data": true
+    },
+    {
+      "title": "Desktop Today overview",
+      "file": "desktop/01-today-v2.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1676576,
+      "format": "PNG",
+      "role": "desktop-view",
+      "sample_data": true
+    },
+    {
+      "title": "Desktop planner comparison",
+      "file": "desktop/02-planner-v2.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1599511,
+      "format": "PNG",
+      "role": "desktop-view",
+      "sample_data": true
+    },
+    {
+      "title": "Desktop relief directory",
+      "file": "desktop/03-relief-v2.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1806535,
+      "format": "PNG",
+      "role": "desktop-view",
+      "sample_data": true
+    },
+    {
+      "title": "Desktop guide library and reader",
+      "file": "desktop/04-guides-v2.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1523191,
+      "format": "PNG",
+      "role": "desktop-view",
+      "sample_data": true
+    },
+    {
+      "title": "Desktop preferences and detail dialog",
+      "file": "desktop/05-settings-v2.png",
+      "width": 1586,
+      "height": 992,
+      "bytes": 1420626,
+      "format": "PNG",
+      "role": "desktop-view",
+      "sample_data": true
+    }
+  ]
+}

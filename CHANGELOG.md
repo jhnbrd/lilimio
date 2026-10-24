@@ -2,7 +2,19 @@
 
 Versions follow [the release policy](docs/RELEASING.md). Release publication and manual server deployment are separate events.
 
-## 0.3.0 — Unreleased
+## 0.4.0 — Pending publication
+
+- Forest/ivory design overhaul with responsive page shells, bottom-anchored footers, normal-sized controls, and focused detail dialogs.
+- Available-space pagination for planning options, relief places and other lists; weather display scales with viewport height.
+- Worldwide street, barangay, district and city search, optional GPS and map-pin selection, with an area-forecast accuracy disclaimer.
+- Relief searches can reuse the selected forecast location; previous saved directory areas remain available.
+- Five-minute in-memory location-search caching and corrected request/timeout cleanup.
+- Optional exact-place Wikimedia photo lookup with attribution, bounded caching and explicit unavailable states.
+- Shared interaction motion with reduced-motion support, updated onboarding and source/privacy documentation, and design reference boards.
+
+This release requires rebuilding both Compose services. No server update is performed by pushing source or preparing its release.
+
+## 0.3.0 — 2026-10-23
 
 - Worldwide weather city/device selection with local forecast/planner times and DST-aware timestamps.
 - Settings version/build identity and uncached server build metadata; Docker revision stamping.

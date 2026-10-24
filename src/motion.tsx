@@ -3,7 +3,13 @@ import { useApp } from "./state";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 /** Each engine owns separate elements; cleanup also handles React StrictMode. */
-export function WelcomeMotion({ children }: { children: ReactNode }) {
+export function WelcomeMotion({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const deviceReduced = useReducedMotion();
   const { motionPreference } = useApp();
@@ -45,7 +51,11 @@ export function WelcomeMotion({ children }: { children: ReactNode }) {
       cleanup();
     };
   }, [reduced]);
-  return <div ref={root}>{children}</div>;
+  return (
+    <div ref={root} className={className}>
+      {children}
+    </div>
+  );
 }
 
 /** React owns routes/notices; CSS owns hover/focus effects. */

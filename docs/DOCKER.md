@@ -23,7 +23,7 @@ git pull --ff-only origin main &&
 APP_BUILD_SHA="$(git rev-parse HEAD)" docker compose up -d --build
 ```
 
-The `&&` prevents rebuilding old source after a failed pull. Docker installs dependencies from the lockfile, runs tests and compilation, then replaces the service when its image changes. No runtime environment file, private PAGASA credentials, database, or persistent volume is required. The observations service is internal to Compose and has no host port; Nginx proxies `/api/observations/pagasa` to it.
+The `&&` prevents rebuilding old source after a failed pull. Docker installs dependencies from the lockfile, runs tests and compilation, then replaces the service when its image changes. No runtime environment file, private PAGASA credentials, database, or persistent volume is required. The observations service is internal to Compose and has no host port; Nginx proxies `/api/observations/pagasa` and optional `/api/places/photo` lookups to it. Rebuild both services for v0.4.0; restarting only Nginx leaves the new photo endpoint unavailable.
 
 ## Verify
 

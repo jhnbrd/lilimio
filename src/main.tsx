@@ -5,6 +5,8 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { App } from "./App";
 import "./styles.css";
 import "./app-frame.css";
+import "./design-system.css";
+import "./viewport-layout.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>

@@ -1,31 +1,38 @@
 import {
   MapPin,
-  ShieldCheck,
+  BookOpen,
   Bell,
   Settings,
   BarChart3,
   Bookmark,
-  Download,
 } from "lucide-react";
-import { Row, Art } from "../ui";
+import { Link } from "react-router-dom";
 export default function More() {
   return (
-    <div className="more-page">
-      <h1>More</h1>
-      <div className="more-links">
-        <Row icon={<MapPin />} to="/explore">
-          Find relief
-        </Row>
-        <Row icon={<ShieldCheck />} to="/learn">
-          Safety guides
-        </Row>
-        <Row icon={<Bell />} to="/updates">
-          Local updates
-        </Row>
-        <Row icon={<Settings />} to="/settings">
-          Settings
-        </Row>
+    <section className="more-page">
+      <p className="eyebrow">A little more help</p>
+      <h1>Make room for cooler days.</h1>
+      <div className="destination-grid">
+        {[
+          [BarChart3, "/forecast", "Forecast", "The hours ahead."],
+          [MapPin, "/explore", "Find relief", "Find your next cool stop."],
+          [BookOpen, "/learn", "Guides", "Practical help for hot days."],
+          [Bell, "/updates", "Updates", "Outlooks and official sources."],
+          [Bookmark, "/saved", "Saved", "Keep your plans close."],
+          [Settings, "/settings", "Settings", "Make lilimio work for you."],
+        ].map(([Icon, to, label, detail]) => {
+          const Glyph = Icon as typeof MapPin;
+          return (
+            <Link key={String(to)} to={String(to)}>
+              <Glyph size={24} />
+              <span className="destination-copy">
+                <strong>{String(label)}</strong>
+                <small>{String(detail)}</small>
+              </span>
+            </Link>
+          );
+        })}
       </div>
-    </div>
+    </section>
   );
 }

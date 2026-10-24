@@ -1,10 +1,11 @@
+import { Paged } from "../components/pagination";
 import { useState } from "react";
-import { Info, Sun, ArrowRight, ExternalLink } from "lucide-react";
+import { Info, Sun, ExternalLink } from "lucide-react";
 import { Art, ActionLink, Source } from "../ui";
 import { useApp } from "../state";
 export default function Updates() {
   const [tab, setTab] = useState("Forecast");
-  const { city, weather } = useApp();
+  const { city } = useApp();
   return (
     <div className="updates-layout">
       <section>
@@ -36,31 +37,43 @@ export default function Updates() {
             </div>
           </article>
         )}
-        <article className="update-item">
-          <Info size={32} />
-          <div>
-            <p>Official advisories are not connected in this version.</p>
-            <p className="muted">
-              Check current bulletins directly with official sources.
-            </p>
-            <a
-              className="button text"
-              href="https://www.pagasa.dost.gov.ph/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              View PAGASA <ExternalLink size={19} />
-            </a>
-            <a
-              className="button text"
-              href="https://doh.gov.ph/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              View Department of Health <ExternalLink size={19} />
-            </a>
-          </div>
-        </article>
+        {tab === "Official" && (
+          <article className="update-item">
+            <Info size={32} />
+            <div>
+              <p>
+                Official alerts aren’t synced. Open an agency for current
+                advisories.
+              </p>
+              <Paged size={1} label="Agency">
+                <a
+                  className="button text"
+                  href="https://www.pagasa.dost.gov.ph/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  PAGASA <ExternalLink size={19} />
+                </a>
+                <a
+                  className="button text"
+                  href="https://www.weather.gov/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  US Weather Service <ExternalLink size={19} />
+                </a>
+                <a
+                  className="button text"
+                  href="https://doh.gov.ph/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Philippine health guidance <ExternalLink size={19} />
+                </a>
+              </Paged>
+            </div>
+          </article>
+        )}
       </section>
       <aside className="updates-aside desktop-only">
         <Art scene="ready" />

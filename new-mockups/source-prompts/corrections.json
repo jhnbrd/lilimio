@@ -1,0 +1,42 @@
+[
+  {
+    "i": 0,
+    "file": "mobile/01-today-forecast-station-v2.png",
+    "prompt": "Edit this UI mockup board. Change ONLY the bottom navigation selected state in the MIDDLE phone (Forecast): Today must be the selected forest-green icon and label, and Plan must be an unselected thin gray icon and label. Keep the left phone, right phone/dialog, all wording, charts, illustration, sizing, colors, spacing, and every other element exactly unchanged. This is a surgical navigation-state correction. Do not add or remove anything."
+  },
+  {
+    "i": 2,
+    "file": "mobile/03-relief-map-list-place-v2.png",
+    "prompt": "Edit this mockup board with surgical copy corrections only. In BOTH the left and middle Find relief screens, replace the subtitle 'Discover cooler and safer places in your area.' with 'Explore community-mapped places.' Remove any assertion that mapped destinations are safer. Keep the unknown hours, cooling, access and shade labels. On every building or park illustration thumbnail and the large building illustration on the right, add a tiny but legible 'Illustration' label so these cannot be mistaken for real facility photos. Preserve all three screens, controls, layout, safe areas, sizes, colors, maps, artwork and all other text exactly. Keep the Concept · sample data caption."
+  },
+  {
+    "i": 6,
+    "file": "mobile/07-offline-notices-and-pickers-v2.png",
+    "prompt": "Edit the three-phone mockup board. Preserve geometry, layout, controls and forest/ivory styling. Correct the source and safety language: all three top location labels must say 'Quezon City'. In the FIRST and SECOND phone, replace 'Current conditions' with 'Estimated heat index', retain 38°C, replace 'Very hot' with 'Extreme caution', and replace the high/low line with 'Air temperature 31°C'. In FIRST phone retain the exact offline warning and retrieved-age text; replace the invented 'Riverside Community Station' with 'Science Garden · 2.1 km', keeping the explicit 'Saved station reading' and age. In SECOND phone retain the complete new-version notice and both Update now and Later controls, but remove the extra Today's outlook summary below it so the screen remains sparse and nothing continues below navigation. In THIRD phone replace the subtitle 'Plan ahead for safer days' with 'Compare forecast conditions'. In the Preferred time dialog keep Morning/Afternoon/Evening and the selected Morning radio, but remove the numeric time ranges below these labels so unsupported period ranges are not introduced. Retain Cancel/Apply/Close. Do not alter any other element. No new paragraphs. Keep Concept · sample data."
+  },
+  {
+    "i": 7,
+    "file": "desktop/01-today-v2.png",
+    "prompt": "Edit this desktop UI mockup surgically. Preserve all layout, illustration, graph, buttons, type sizes, and sidebar navigation exactly. Change ONLY these text strings: sidebar footer 'lilimio. v2.0.0' becomes 'lilimio. v0.3.0'; sidebar slogan becomes 'Know the heat. Find your shade.'; page subtitle becomes 'Model estimates to help you plan around the heat.'; the amber Extreme caution banner subtext becomes 'Plan shade and cooling breaks.' Keep the 38°C estimate, 31°C air temperature, timestamps, and station summary as illustrative sample data. No other changes."
+  },
+  {
+    "i": 8,
+    "file": "desktop/02-planner-v2.png",
+    "prompt": "Make only these copy edits in the desktop planner mockup; preserve all layout, sizes, sidebar, illustration, fields, selected state, buttons, and data: page subtitle must be 'Compare heat, UV and rain for your activity.'; result subheading explanatory line must be 'Two forecast comparisons for your activity.'; change the first option badge 'Recommended' to 'Lower score'. The existing 'Forecast comparison, not a safety guarantee.' note remains exactly. Remove any stray punctuation in explanatory text. No additional features or text."
+  },
+  {
+    "i": 9,
+    "file": "desktop/03-relief-v2.png",
+    "prompt": "Edit this desktop directory mockup while preserving its map, workspace geometry, forest/ivory styling, controls and visible spacing. Correct the LEFT SIDEBAR to this EXACT labeled navigation in order: Today, Forecast, Plan, Find relief (selected), Guides, Updates, Settings. Remove the invented Heat info, Community and Resources destinations. Top right replace 'Weather data: PAGASA' and its timestamp with 'Community map · OpenStreetMap'; the directory must not imply PAGASA verifies places. The second result park must read 'Hours unknown' instead of the invented opening hours, and 'Shade unverified' instead of a facility guarantee. Add a small legible 'Illustration' label on each facility thumbnail including the selected bottom preview; these are sample illustrations, not real place photos. Map attribution should read '© OpenStreetMap contributors · OpenFreeMap'. Replace the page subtitle with 'Explore nearby community-mapped places.' Keep unknown-access/cooling notes, Sources, Directions, View details, Search this area, pager and Concept · sample data. No other changes."
+  },
+  {
+    "i": 10,
+    "file": "desktop/04-guides-v2.png",
+    "prompt": "Edit this guide-library desktop mockup. Preserve all pane layouts, typography, article text, pagination, illustrations, colors, and controls. Correct ONLY the left sidebar to this exact navigation order: Today, Forecast, Plan, Find relief, Guides (selected), Updates, Settings. Remove the invented Overview, Heat risk, Map and Wellbeing destinations. Keep seven navigation rows with the same outline icon style. Change top location to Quezon City; remove the unrelated weather temperature and calendar date from that top bar to keep the reading task focused. Preserve the Concept · sample data caption. No other changes."
+  },
+  {
+    "i": 11,
+    "file": "desktop/05-settings-v2.png",
+    "prompt": "Edit this desktop Settings mockup while preserving the entire settings pane, dimmed background, centered Temperature units dialog, radio choices, focus ring, buttons, typography and illustration. Correct ONLY the global LEFT SIDEBAR to the same complete desktop navigation used elsewhere: Today, Forecast, Plan, Find relief, Guides, Updates, Settings (selected). There must be no More destination on desktop and no missing core destinations. Use consistent small outline icons and fit all seven rows within the sidebar without scrolling. Remove the native desktop-window minimize/maximize/close chrome from the upper right; this is a browser app screenshot, not an OS window mockup. Preserve version0.3.0 and build9f16464. No other changes."
+  }
+]

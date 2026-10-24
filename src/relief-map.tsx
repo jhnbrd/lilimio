@@ -1,3 +1,4 @@
+import { Paged } from "./components/pagination";
 import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -44,7 +45,9 @@ export default function ReliefMap({
       instance.current = map;
       setMoved(false);
       map.on("dragend", () => setMoved(true));
-      map.on("zoomend", event => { if (event.originalEvent) setMoved(true); });
+      map.on("zoomend", (event) => {
+        if (event.originalEvent) setMoved(true);
+      });
       observer = new ResizeObserver(() => map?.resize());
       observer.observe(root.current);
       map.addControl(
@@ -132,12 +135,22 @@ export default function ReliefMap({
     <div className="relief-map" aria-label={`Map around ${city.name}`}>
       <div className="map-canvas" ref={root} />
       {moved && !failed && (
-        <button className="button outline search-map-area" onClick={() => {
-          const point = instance.current?.getCenter();
-          if (!point) return;
-          onSearchArea({name: "Map area", region: `${point.lat.toFixed(3)}, ${point.lng.toFixed(3)}`, latitude: point.lat, longitude: ((point.lng + 180) % 360 + 360) % 360 - 180});
-          setMoved(false);
-        }}>Search this area (3 km)</button>
+        <button
+          className="button outline search-map-area"
+          onClick={() => {
+            const point = instance.current?.getCenter();
+            if (!point) return;
+            onSearchArea({
+              name: "Map area",
+              region: `${point.lat.toFixed(3)}, ${point.lng.toFixed(3)}`,
+              latitude: point.lat,
+              longitude: ((((point.lng + 180) % 360) + 360) % 360) - 180,
+            });
+            setMoved(false);
+          }}
+        >
+          Search this area (3 km)
+        </button>
       )}
       {failed && (
         <div className="map-fallback" role="status">
@@ -164,22 +177,24 @@ export default function ReliefMap({
           title={`${groupChoices.length} nearby places`}
           onClose={() => setGroupChoices(null)}
         >
-          {groupChoices.map((place) => (
-            <button
-              type="button"
-              key={place.id}
-              className="picker-row"
-              onClick={() => {
-                setGroupChoices(null);
-                latest.current(place);
-              }}
-            >
-              <span>
-                {place.name}
-                <small>{place.kind}</small>
-              </span>
-            </button>
-          ))}
+          <Paged label="Places">
+            {groupChoices.map((place) => (
+              <button
+                type="button"
+                key={place.id}
+                className="picker-row"
+                onClick={() => {
+                  setGroupChoices(null);
+                  latest.current(place);
+                }}
+              >
+                <span>
+                  {place.name}
+                  <small>{place.kind}</small>
+                </span>
+              </button>
+            ))}
+          </Paged>
         </Modal>
       )}
     </div>

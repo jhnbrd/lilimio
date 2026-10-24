@@ -1,24 +1,31 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Cookie, Download, X } from "lucide-react";
+import { useLocation } from "react-router-dom";
+import { Info } from "lucide-react";
 import { useApp } from "../state";
 import { usePwa } from "../pwa";
-import { Button } from "../ui";
-import { NoticeMotion } from "../motion";
-import { installReminderEligible, nextNotice } from "../lib/notices";
-
-/** A single notice slot prevents install, storage, update and toast overlays competing. */
+import { Button, Modal, ActionLink } from "../ui";
+import {
+  installReminderEligible,
+  nextNotice,
+  type NoticeKind,
+} from "../lib/notices";
+/** One header entry for optional notices; transient feedback gets a measured slot. */
 export function AppNotices() {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { toast } = useApp();
   const pwa = usePwa();
   const card = useRef<HTMLDivElement>(null);
   const [modal, setModal] = useState(false);
+  const [details, setDetails] = useState<NoticeKind>(null);
   useEffect(() => {
-    const check = () => setModal(!!document.querySelector("dialog[open]"));
-    check();
+    const check = () =>
+      setModal(
+        [...document.querySelectorAll("dialog[open]")].some(
+          (dialog) => !dialog.closest(".notice-details"),
+        ),
+      );
     const observer = new MutationObserver(check);
+    check();
     observer.observe(document.body, {
       childList: true,
       subtree: true,
@@ -31,7 +38,10 @@ export function AppNotices() {
     modal,
     toast: !!toast,
     update: pwa.refresh,
-    storage: pwa.storagePending && !pathname.startsWith("/legal"),
+    storage:
+      pwa.storagePending &&
+      pathname !== "/welcome" &&
+      !pathname.startsWith("/legal"),
     offline: pwa.ready,
     install: installReminderEligible({
       installed: pwa.installed,
@@ -41,116 +51,136 @@ export function AppNotices() {
     }),
   });
   useLayoutEffect(() => {
-    if (!kind || !card.current) return;
-    const node = card.current;
+    if (!kind) return;
+    document.documentElement.dataset.notice = kind;
+    if (kind !== "toast" || !card.current)
+      return () => {
+        delete document.documentElement.dataset.notice;
+      };
     const measure = () =>
       document.documentElement.style.setProperty(
         "--notice-space",
-        `${node.getBoundingClientRect().height + 28}px`,
+        `${card.current!.getBoundingClientRect().height + 12}px`,
       );
-    measure();
     const observer = new ResizeObserver(measure);
-    observer.observe(node);
+    observer.observe(card.current);
+    measure();
     return () => {
       observer.disconnect();
+      delete document.documentElement.dataset.notice;
       document.documentElement.style.removeProperty("--notice-space");
     };
   }, [kind, toast]);
+  const labels = {
+    storage: "Storage notice",
+    install: "Install app",
+    update: "Update ready",
+    offline: "Offline ready",
+    toast: "Feedback",
+  };
   return (
-    <div
-      className={`notice-host ${pathname === "/welcome" ? "welcome-notices" : ""}`}
-    >
-      <NoticeMotion visible={!!kind}>
-        <div ref={card}>
-          {kind === "toast" ? (
-            <div className="toast" role="status">
+    <>
+      {kind &&
+        (kind === "toast" ? (
+          <div className="notice-host">
+            <div ref={card} className="notice-bar" role="status">
               {toast}
             </div>
-          ) : kind === "storage" ? (
-            <aside className="app-notice" aria-labelledby="storage-title">
-              <div className="notice-heading">
-                <Cookie size={23} aria-hidden="true" />
-                <h2 id="storage-title">A little storage, no tracking.</h2>
-              </div>
-              <p>
-                lilimio. uses essential local storage and offline caching. We
-                don’t set cookies or use advertising or analytics trackers.
-              </p>
-              <div className="notice-actions">
-                <Button onClick={pwa.acknowledgeStorage}>
-                  Accept essential storage
-                </Button>
-                <Link to="/legal/privacy">Privacy & controls</Link>
-              </div>
-              <small>
-                External weather and map services receive your requests. No
-                optional tracking is enabled.
-              </small>
-            </aside>
-          ) : kind === "install" ? (
-            <aside
-              className="app-notice install-reminder"
-              aria-labelledby="install-title"
-            >
-              <button
-                className="icon-button notice-close"
-                aria-label="Close install reminder for this session"
-                onClick={() => pwa.hideReminder()}
-              >
-                <X size={20} />
-              </button>
-              <div className="install-reminder-heading">
-                <img
-                  src="/images/brand/lilimio/png/app-icon-256.png"
-                  alt=""
-                  width="48"
-                  height="48"
-                />
-                <div>
-                  <h2 id="install-title">A little shade, one tap away.</h2>
-                  <p>Add lilimio to your home screen.</p>
-                </div>
-              </div>
-              <div className="notice-actions">
+          </div>
+        ) : (
+          <button
+            className="header-notice"
+            onClick={() => setDetails(kind)}
+            aria-haspopup="dialog"
+          >
+            <Info size={18} />
+            <span>{labels[kind]}</span>
+          </button>
+        ))}
+      {details && (
+        <div className="notice-details">
+          <Modal
+            title={
+              details === "storage"
+                ? "Local storage, no tracking"
+                : labels[details]
+            }
+            onClose={() => setDetails(null)}
+          >
+            {details === "storage" ? (
+              <>
+                <p>
+                  lilimio uses essential browser storage for preferences, saved
+                  plans and places, and offline guides. It sets no cookies and
+                  has no advertising or analytics trackers.
+                </p>
+                <p>
+                  Weather, place search, optional maps and photos connect to
+                  external services when you use them. These services receive
+                  your requests.
+                </p>
+                <ActionLink to="/legal/privacy">Privacy & controls</ActionLink>
                 <Button
-                  onClick={() =>
-                    pwa.canInstall
-                      ? void pwa.install()
-                      : navigate("/settings/install")
-                  }
+                  onClick={() => {
+                    pwa.acknowledgeStorage();
+                    setDetails(null);
+                  }}
                 >
-                  <Download size={18} />
-                  Add to home screen
+                  Got it
                 </Button>
-                <Button variant="text" onClick={() => pwa.hideReminder(true)}>
+              </>
+            ) : details === "install" ? (
+              <>
+                <p>
+                  Add lilimio to your home screen for quick access. Installation
+                  is optional.
+                </p>
+                <ActionLink variant="primary" to="/settings/install">
+                  View install options
+                </ActionLink>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    pwa.hideReminder();
+                    setDetails(null);
+                  }}
+                >
+                  Not now
+                </Button>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    pwa.hideReminder(true);
+                    setDetails(null);
+                  }}
+                >
                   Don’t show again
                 </Button>
-              </div>
-            </aside>
-          ) : kind === "update" || kind === "offline" ? (
-            <aside className="app-notice" aria-live="polite">
-              <h2>
-                {kind === "update"
-                  ? "A new version is ready."
-                  : "Your offline essentials are ready."}
-              </h2>
-              <p>
-                {kind === "update"
-                  ? "Update when you’re ready to reload the app."
-                  : "The app and safety guides are saved for offline use."}
-              </p>
-              <div className="notice-actions">
-                {kind === "update" && (
+              </>
+            ) : (
+              <>
+                <p>
+                  {details === "update"
+                    ? "A new version is ready. Update when you are ready to reload the app."
+                    : "The app and safety guides are saved for offline use. Live forecasts, maps and photos still need internet."}
+                </p>
+                {details === "update" && (
                   <Button onClick={pwa.update}>Update now</Button>
                 )}
-                <Button variant="text" onClick={pwa.dismissUpdate}>
+                <Button
+                  variant="text"
+                  onClick={() => {
+                    pwa.dismissUpdate();
+                    setDetails(null);
+                  }}
+                >
                   Dismiss
                 </Button>
-              </div>
-            </aside>
-          ) : null}
+              </>
+            )}
+          </Modal>
         </div>
-      </NoticeMotion>
-    </div>
+      )}
+    </>
   );
 }

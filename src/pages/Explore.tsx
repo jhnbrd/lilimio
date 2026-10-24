@@ -1,3 +1,5 @@
+import { Paged, ReadingSections } from "../components/pagination";
+import { PlacePhoto } from "../components/place-photo";
 import {
   lazy,
   Suspense,
@@ -17,8 +19,6 @@ import {
   ExternalLink,
   Bookmark,
   TriangleAlert,
-  Map,
-  AlignJustify,
   Send,
   Droplets,
   Building2,
@@ -28,7 +28,7 @@ import {
 import { useApp } from "../state";
 import { places as legacyPlaces, cities, type Place } from "../lib/data";
 import { readStored, writeStored } from "../lib/storage";
-import { Art, Back, Button, Row, ActionLink } from "../ui";
+import { Art, Back, Button, ActionLink, Modal } from "../ui";
 import {
   directoryKinds,
   validCenter,
@@ -53,7 +53,7 @@ export default function Explore() {
   const [center, setCenter] = useState<DirectoryCenter>(() =>
     readStored(
       "lilimio-directory-center-v1",
-      city && city.id !== "device" ? city : cities[0],
+      city || cities[0],
       validCenter,
     ),
   );
@@ -65,13 +65,20 @@ export default function Explore() {
   );
   const directory = useDirectory(center, type);
   const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState(false);
+  const [about, setAbout] = useState(false);
   const [view, setView] = useState("List");
   const [mapEnabled, setMapEnabled] = useState(false);
-  const searchArea = useCallback((area: DirectoryCenter) => {
-    setCenter(area); setSelection(null); setQuery("");
-    writeStored("lilimio-directory-center-v1", area);
-    directory.load();
-  }, [directory.load]);
+  const searchArea = useCallback(
+    (area: DirectoryCenter) => {
+      setCenter(area);
+      setSelection(null);
+      setQuery("");
+      writeStored("lilimio-directory-center-v1", area);
+      directory.load();
+    },
+    [directory.load],
+  );
   const [selection, setSelection] = useState<Place | null>(null);
   const { id } = useParams();
   const navigate = useNavigate();
@@ -162,80 +169,95 @@ export default function Explore() {
           </p>
         )}
         {directory.error && (
-          <div className="warning" role="alert">
-            <div>
-              <strong>Places couldn’t load</strong>
-              <p>
-                {directory.error}{" "}
-                {directory.result
-                  ? "Showing the last saved search."
-                  : "Try another city or come back later."}
-              </p>
-              <button
-                onClick={() => directory.load()}
-                disabled={directory.loading}
-              >
-                Try again
-              </button>
-            </div>
+          <div className="warning compact-warning" role="alert">
+            <span>
+              {directory.result
+                ? "Refresh failed · saved places"
+                : "Place search unavailable"}
+            </span>
+            <button
+              onClick={() => directory.load()}
+              disabled={directory.loading}
+            >
+              Retry
+            </button>
           </div>
         )}
-        <label className="field-label" htmlFor="place-search">
-          Search places
-        </label>
-        <div className="search-field">
-          <Search />
-          <input
-            id="place-search"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setSelection(null);
-            }}
-            placeholder="Search places"
-          />
-        </div>
-        <label className="filter-field">
-          <TreePine />
-          <span className="sr-only">Place type</span>
-          <select
-            value={type}
-            onChange={(e) => {
-              const category = e.target.value as DirectoryKind;
-              setType(category);
-              writeStored("lilimio-directory-category-v1", category);
-              setSelection(null);
-              if (directory.result) directory.load();
-            }}
+        <div className="directory-tools">
+          <Button variant="outline" onClick={() => setFilters(true)}>
+            Filter places
+          </Button>
+          {filters && (
+            <Modal title="Filter places" onClose={() => setFilters(false)}>
+              {" "}
+              <label className="field-label" htmlFor="place-search">
+                Search places
+              </label>
+              <div className="search-field">
+                <Search />
+                <input
+                  id="place-search"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setSelection(null);
+                  }}
+                  placeholder="Search places"
+                />
+              </div>
+              <label className="filter-field">
+                <TreePine />
+                <span className="sr-only">Place type</span>
+                <select
+                  value={type}
+                  onChange={(e) => {
+                    const category = e.target.value as DirectoryKind;
+                    setType(category);
+                    writeStored("lilimio-directory-category-v1", category);
+                    setSelection(null);
+                    if (directory.result) directory.load();
+                  }}
+                >
+                  <option value="All">Type: All places</option>
+                  <option>Parks &amp; gardens</option>
+                  <option>Indoor places</option>
+                  <option>Drinking water</option>
+                </select>
+              </label>
+              <Button onClick={() => setFilters(false)}>Show results</Button>
+            </Modal>
+          )}
+          <div
+            className="tabs mobile-only"
+            role="group"
+            aria-label="Directory view"
           >
-            <option value="All">Type: All places</option>
-            <option>Parks &amp; gardens</option>
-            <option>Indoor places</option>
-            <option>Drinking water</option>
-          </select>
-        </label>
-        <div
-          className="tabs mobile-only"
-          role="group"
-          aria-label="Directory view"
-        >
-          {["Map", "List"].map((v) => (
-            <button
-              key={v}
-              className={view === v ? "selected" : ""}
-              aria-pressed={view === v}
-              onClick={() => { setView(v); if (v === "Map") setMapEnabled(true); }}
-            >
-              {v}
-            </button>
-          ))}
+            {["Map", "List"].map((v) => (
+              <button
+                key={v}
+                className={view === v ? "selected" : ""}
+                aria-pressed={view === v}
+                onClick={() => {
+                  setView(v);
+                  if (v === "Map") setMapEnabled(true);
+                }}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
         <div
           className={`mobile-map mobile-only ${view !== "Map" ? "hidden" : ""}`}
         >
           {narrow && view === "Map" && (
             <Suspense fallback={<p className="map-loading">Loading map…</p>}>
-              <ReliefMap city={center} places={visible} onSelect={choose} onSearchArea={searchArea} />
+              <ReliefMap
+                city={center}
+                places={visible}
+                onSelect={choose}
+                onSearchArea={searchArea}
+              />
             </Suspense>
           )}
         </div>
@@ -248,27 +270,44 @@ export default function Explore() {
             : "Search nearby to load real places."}
         </p>
         <div className="place-list">
-          {(narrow && view === "Map" ? visible.slice(0, 1) : visible).map(
-            (p) => (
-              <button
-                className="place-row"
-                key={p.id}
-                onClick={() => choose(p)}
-              >
-                <PlaceIllustration place={p} />
-                <span>
-                  <strong>{p.name}</strong>
-                  <small>
-                    <MapPin size={17} />
-                    {p.distanceKm?.toFixed(1)} km · {p.kind}
-                  </small>
-                  <small>{accessLabel(p)} · {p.osm?.openingHours ? "Hours mapped; check before travel" : "Hours unknown"}</small>
-                  <small>{p.kind === "Drinking water" ? "Water quality unverified" : p.kind === "Indoor places" ? `Cooling: ${p.osm?.airConditioning || "unknown"}` : `Shade: ${p.osm?.shade || "unknown"}`}</small>
-                </span>
-                <ChevronRight size={20} />
-              </button>
-            ),
-          )}
+          <Paged
+            key={`${query}:${type}:${center.latitude},${center.longitude}`}
+            size={narrow && view === "Map" ? 1 : undefined}
+            label="Places"
+          >
+            {(narrow && view === "Map" ? visible.slice(0, 1) : visible).map(
+              (p) => (
+                <button
+                  className="place-row"
+                  key={p.id}
+                  onClick={() => choose(p)}
+                >
+                  <PlaceIllustration place={p} />
+                  <span>
+                    <strong>{p.name}</strong>
+                    <small>
+                      <MapPin size={17} />
+                      {p.distanceKm?.toFixed(1)} km · {p.kind}
+                    </small>
+                    <small>
+                      {accessLabel(p)} ·{" "}
+                      {p.osm?.openingHours
+                        ? "Hours mapped; check before travel"
+                        : "Hours unknown"}
+                    </small>
+                    <small>
+                      {p.kind === "Drinking water"
+                        ? "Water quality unverified"
+                        : p.kind === "Indoor places"
+                          ? `Cooling: ${p.osm?.airConditioning || "unknown"}`
+                          : `Shade: ${p.osm?.shade || "unknown"}`}
+                    </small>
+                  </span>
+                  <ChevronRight size={20} />
+                </button>
+              ),
+            )}
+          </Paged>
           {!visible.length && (
             <div className="empty-state">
               <TreePine size={32} />
@@ -282,48 +321,71 @@ export default function Explore() {
               <p>
                 {directory.result
                   ? "Try another category or city. OpenStreetMap coverage varies; an empty search does not prove there are no places nearby."
-                  : "Choose a city and select Find nearby places to search OpenStreetMap."}
+                  : "Choose a city, then find nearby places."}
               </p>
             </div>
           )}
         </div>
-        <p className="source directory-provenance">
-          {directory.result && (
-            <>
-              Retrieved{" "}
-              {dateLabel(directory.result.fetchedAt, {
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-              {directory.stale ? " · Saved search needs refreshing." : ""}
-              <br />
-            </>
-          )}
-          ©{" "}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noreferrer"
-          >
-            OpenStreetMap contributors
-          </a>{" "}
-          ·{" "}
-          <a href="https://photon.komoot.io/" target="_blank" rel="noreferrer">
-            Photon search
-          </a>
-          . Up to 50 places within 3 km; distances are straight-line from the
-          selected search centre. Search sends those coordinates. These are
-          mapped places, not certified cooling centres. Check access, hours,
-          shade, and water conditions before visiting.
-        </p>
+        <Button variant="text" onClick={() => setAbout(true)}>
+          About these places & sources
+        </Button>
+        {about && (
+          <Modal title="About these places" onClose={() => setAbout(false)}>
+            <ReadingSections>
+              {directory.error && <p>{directory.error}</p>}
+              <p className="source directory-provenance">
+                {directory.result && (
+                  <>
+                    Retrieved{" "}
+                    {dateLabel(directory.result.fetchedAt, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                    {directory.stale ? " · Saved search needs refreshing." : ""}
+                    <br />
+                  </>
+                )}
+                ©{" "}
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  OpenStreetMap contributors
+                </a>{" "}
+                ·{" "}
+                <a
+                  href="https://photon.komoot.io/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Photon search
+                </a>
+                . Up to 50 places within 3 km; distances are straight-line from
+                the selected search centre. Search sends those coordinates.
+                These are mapped places, not certified cooling centres. Check
+                access, hours, shade, and water conditions before visiting.
+              </p>
+            </ReadingSections>
+          </Modal>
+        )}
       </section>
       <section className="explore-map desktop-only">
-        {!narrow && !mapEnabled && <Button variant="outline" onClick={() => setMapEnabled(true)}>Load interactive map</Button>}
+        {!narrow && !mapEnabled && (
+          <Button variant="outline" onClick={() => setMapEnabled(true)}>
+            Load interactive map
+          </Button>
+        )}
         {!narrow && mapEnabled && (
           <Suspense fallback={<p className="map-loading">Loading map…</p>}>
-            <ReliefMap city={center} places={visible} onSelect={choose} onSearchArea={searchArea} />
+            <ReliefMap
+              city={center}
+              places={visible}
+              onSelect={choose}
+              onSearchArea={searchArea}
+            />
           </Suspense>
         )}
         {(selected || visible[0]) && (
@@ -398,6 +460,7 @@ export function PlaceDetail({
 }) {
   const { notify } = useApp();
   const [draft, setDraft] = useState(false);
+  const [facts, setFacts] = useState(false);
   const [issue, setIssue] = useState("Opening hours");
   const [text, setText] = useState("");
   const [saved, setSaved] = useState(() =>
@@ -415,7 +478,7 @@ export function PlaceDetail({
   }
   return (
     <article className={`place-detail ${compact ? "compact" : ""}`}>
-      <PlaceIllustration place={place} />
+      <PlacePhoto place={place} />
       <div>
         <h2>{place.name}</h2>
         <p className="error-text">
@@ -423,141 +486,170 @@ export function PlaceDetail({
           {place.osm ? "OpenStreetMap listing" : "Unverified starter listing"}
         </p>
         <p className="muted">{place.address}</p>
-        {!compact && <p>{place.description}</p>}
-        <div className="place-facts">
-          <span>
-            <Clock />
-            <span>
-              <strong>Hours</strong>
-              <small>{place.osm?.openingHours || "Not mapped"}</small>
-            </span>
-          </span>
-          <span>
-            <Armchair />
-            <span>
-              <strong>Amenities</strong>
-              <small>
-                {place.osm ? place.amenities.join(" · ") : "Not confirmed"}
-              </small>
-            </span>
-          </span>
-        </div>
-        {place.osm && (
-          <div className="place-data">
-            <p>
-              {accessLabel(place)}
-              {place.osm.fee ? ` · Fee: ${place.osm.fee} (mapped)` : ""}
-            </p>
-            {place.kind === "Indoor places" && (
-              <p>
-                Air conditioning: {place.osm.airConditioning || "not mapped"}
+
+        <Button variant="outline" onClick={() => setFacts(true)}>
+          Facilities, access & sources
+        </Button>
+        {facts && (
+          <Modal title="Place details" onClose={() => setFacts(false)}>
+            <Paged size={1} label="Details">
+              <div>
+                <p>{place.description}</p>
+                <div className="place-facts">
+                  <span>
+                    <Clock />
+                    <span>
+                      <strong>Hours</strong>
+                      <small>{place.osm?.openingHours || "Not mapped"}</small>
+                    </span>
+                  </span>
+                  <span>
+                    <Armchair />
+                    <span>
+                      <strong>Amenities</strong>
+                      <small>
+                        {place.osm
+                          ? place.amenities.join(" · ")
+                          : "Not confirmed"}
+                      </small>
+                    </span>
+                  </span>
+                </div>
+              </div>
+              {place.osm && (
+                <div className="place-data">
+                  <p>
+                    {accessLabel(place)}
+                    {place.osm.fee ? ` · Fee: ${place.osm.fee} (mapped)` : ""}
+                  </p>
+                  {place.kind === "Indoor places" && (
+                    <p>
+                      Air conditioning:{" "}
+                      {place.osm.airConditioning || "not mapped"}
+                    </p>
+                  )}
+                  {place.kind === "Parks & gardens" && (
+                    <p>Shade: {place.osm.shade || "not mapped"}</p>
+                  )}
+                  <p className="source">
+                    Community tags, not a live inspection.{" "}
+                    <a href={place.osm.url} target="_blank" rel="noreferrer">
+                      View the OpenStreetMap record <ExternalLink size={13} />
+                    </a>{" "}
+                    · Retrieved{" "}
+                    {dateLabel(place.osm.fetchedAt, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              )}
+              <p className="muted">
+                Check access and opening hours before travelling.{" "}
+                {place.kind === "Drinking water"
+                  ? "A mapped water point is not a water-quality inspection."
+                  : "Mapped facilities may be unavailable or unsuitable when you arrive."}
               </p>
-            )}
-            {place.kind === "Parks & gardens" && (
-              <p>Shade: {place.osm.shade || "not mapped"}</p>
-            )}
-            <p className="source">
-              Community tags, not a live inspection.{" "}
-              <a href={place.osm.url} target="_blank" rel="noreferrer">
-                View the OpenStreetMap record <ExternalLink size={13} />
-              </a>{" "}
-              · Retrieved{" "}
-              {dateLabel(place.osm.fetchedAt, {
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}
-            </p>
-          </div>
-        )}
-        <p className="muted">Check access and opening hours before travelling. {place.kind === "Drinking water" ? "A mapped water point is not a water-quality inspection." : "Mapped facilities may be unavailable or unsuitable when you arrive."}</p>
-        <a
-          className="button primary"
-          href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <ExternalLink size={21} />
-          Open directions
-        </a>
-        {compact && (
-          <Link className="button outline" to={`/explore/${place.id}`}>
-            View place details
-          </Link>
-        )}
-        <Button variant="text" onClick={save}>
-          <Bookmark size={21} fill={saved ? "currentColor" : "none"} />
-          {saved ? "Saved on this device" : "Save place"}
-        </Button>
-        <Button variant="text" onClick={() => setDraft((v) => !v)}>
-          Correct place details
-        </Button>
-        {draft && (
-          <form
-            className="correction-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const drafts = readStored<unknown[]>(
-                "lilimio-correction-drafts",
-                [],
-                Array.isArray,
-              );
-              if (
-                writeStored("lilimio-correction-drafts", [
-                  ...drafts,
-                  {
-                    place: place.id,
-                    issue,
-                    text,
-                    savedAt: new Date().toISOString(),
-                  },
-                ])
-              ) {
-                notify(
-                  "Draft saved on this device. It has not been submitted.",
-                );
-                setDraft(false);
-                setText("");
-              } else notify("Could not save draft.");
-            }}
-          >
-            <label className="field-label" htmlFor="issue">
-              Issue
-            </label>
-            <select
-              id="issue"
-              value={issue}
-              onChange={(e) => setIssue(e.target.value)}
+            </Paged>
+            <Button
+              variant="text"
+              onClick={() => {
+                setFacts(false);
+                setDraft(true);
+              }}
             >
-              <option>Opening hours</option>
-              <option>Access</option>
-              <option>Amenities</option>
-              <option>Other</option>
-            </select>
-            <label className="field-label" htmlFor="correction">
-              What changed?
-            </label>
-            <textarea
-              id="correction"
-              required
-              minLength={8}
-              maxLength={500}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <p className="muted">
-              {text.length}/500 · Saved on this device only. Report submission
-              is not connected.
-            </p>
-            <Button type="submit">
-              <Send size={21} />
-              Save draft
+              Correct place details
             </Button>
-          </form>
+          </Modal>
+        )}
+        <div className="place-actions">
+          <a
+            className="button primary"
+            href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <ExternalLink size={21} />
+            Open directions
+          </a>
+          {compact && (
+            <Link className="button outline" to={`/explore/${place.id}`}>
+              View place details
+            </Link>
+          )}
+          <Button variant="text" onClick={save}>
+            <Bookmark size={21} fill={saved ? "currentColor" : "none"} />
+            {saved ? "Saved on this device" : "Save place"}
+          </Button>
+        </div>
+        {draft && (
+          <Modal title="Correct place details" onClose={() => setDraft(false)}>
+            <form
+              className="correction-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const drafts = readStored<unknown[]>(
+                  "lilimio-correction-drafts",
+                  [],
+                  Array.isArray,
+                );
+                if (
+                  writeStored("lilimio-correction-drafts", [
+                    ...drafts,
+                    {
+                      place: place.id,
+                      issue,
+                      text,
+                      savedAt: new Date().toISOString(),
+                    },
+                  ])
+                ) {
+                  notify(
+                    "Draft saved on this device. It has not been submitted.",
+                  );
+                  setDraft(false);
+                  setText("");
+                } else notify("Could not save draft.");
+              }}
+            >
+              <label className="field-label" htmlFor="issue">
+                Issue
+              </label>
+              <select
+                id="issue"
+                value={issue}
+                onChange={(e) => setIssue(e.target.value)}
+              >
+                <option>Opening hours</option>
+                <option>Access</option>
+                <option>Amenities</option>
+                <option>Other</option>
+              </select>
+              <label className="field-label" htmlFor="correction">
+                What changed?
+              </label>
+              <textarea
+                id="correction"
+                required
+                minLength={8}
+                maxLength={500}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <p className="muted">
+                {text.length}/500 · Saved on this device only. Report submission
+                is not connected.
+              </p>
+              <Button type="submit">
+                <Send size={21} />
+                Save draft
+              </Button>
+            </form>
+          </Modal>
         )}
       </div>
     </article>
   );
 }
-
